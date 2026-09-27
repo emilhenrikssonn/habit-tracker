@@ -62,6 +62,34 @@ extension Habit {
         try? ctx.save()
     }
 
+    // MARK: Timer
+
+    var isTimerRunning: Bool { timerStartedAt != nil }
+
+    func timerElapsed(at now: Date = Date()) -> TimeInterval {
+        timerStartedAt.map { max(0, now.timeIntervalSince($0)) } ?? 0
+    }
+
+    func startTimer(in ctx: ModelContext) {
+        timerStartedAt = Date()
+        try? ctx.save()
+    }
+
+    /// Stops the timer and logs the elapsed time to today, rounded to whole minutes.
+    /// Returns the minutes logged (0 for runs under 30 seconds).
+    @discardableResult
+    func stopTimer(in ctx: ModelContext) -> Double {
+        let minutes = (timerElapsed() / 60).rounded()
+        timerStartedAt = nil
+        if minutes > 0 { add(minutes, in: ctx) } else { try? ctx.save() }
+        return minutes
+    }
+
+    func cancelTimer(in ctx: ModelContext) {
+        timerStartedAt = nil
+        try? ctx.save()
+    }
+
     // MARK: Schedule & stats
 
     func isScheduled(on date: Date) -> Bool {

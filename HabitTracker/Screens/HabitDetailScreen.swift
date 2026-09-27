@@ -87,6 +87,7 @@ struct HabitDetailScreen: View {
                         actionPill("+\(habit.format(step))") { habit.add(step, in: ctx) }
                     }
                 }
+                if habit.tracking == .time { timerRow }
             } else {
                 HStack(spacing: 10) {
                     if done {
@@ -100,6 +101,47 @@ struct HabitDetailScreen: View {
         .padding(16)
         .background(RoundedRectangle(cornerRadius: AppMetrics.cardRadius).fill(AppColor.surface))
         .overlay(RoundedRectangle(cornerRadius: AppMetrics.cardRadius).stroke(AppColor.border, lineWidth: 1))
+    }
+
+    @ViewBuilder
+    private var timerRow: some View {
+        if habit.isTimerRunning {
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                let elapsed = habit.timerElapsed(at: context.date)
+                HStack(spacing: 10) {
+                    Circle().fill(AppColor.accent).frame(width: 8, height: 8)
+                    Text(Self.clock(elapsed))
+                        .font(AppFont.mono(24)).foregroundStyle(AppColor.ink)
+                        .monospacedDigit()
+                    Spacer()
+                    actionPill("Cancel") { habit.cancelTimer(in: ctx) }
+                    actionPillFilled(elapsed < 30 ? "Stop" : "Stop · log \(Int((elapsed / 60).rounded())) min") {
+                        habit.stopTimer(in: ctx)
+                    }
+                }
+            }
+            .padding(.top, 4)
+        } else {
+            Button { habit.startTimer(in: ctx) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "timer")
+                    Text("Start timer")
+                }
+                .font(AppFont.mono(13)).foregroundStyle(AppColor.inkOnAccent)
+                .frame(maxWidth: .infinity).padding(.vertical, 11)
+                .background(Capsule().fill(AppColor.accent))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+    }
+
+    /// 04:12, or 1:04:12 past an hour.
+    private static func clock(_ t: TimeInterval) -> String {
+        let s = Int(t)
+        return s >= 3600
+            ? String(format: "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60)
+            : String(format: "%02d:%02d", s / 60, s % 60)
     }
 
     private func actionPill(_ label: String, action: @escaping () -> Void) -> some View {

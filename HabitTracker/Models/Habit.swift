@@ -21,6 +21,8 @@ final class Habit {
     var archived: Bool = false
     var createdAt: Date = Date()
     var sortIndex: Int = 0
+    /// Set while a timer is running for a time habit; persisted so it survives leaving the screen or app.
+    var timerStartedAt: Date? = nil
 
     @Relationship(deleteRule: .cascade, inverse: \HabitLog.habit)
     var logs: [HabitLog] = []
