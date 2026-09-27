@@ -1,0 +1,6 @@
+// Copy to Signing.local.xcconfig and fill in your Apple Developer Team ID
+// (Xcode > Settings > Accounts > your Apple ID > Team, or developer.apple.com > Membership).
+DEVELOPMENT_TEAM = ABCDE12345
+
+// Bundle IDs must be globally unique per Apple team; change this if it's taken.
+// PRODUCT_BUNDLE_IDENTIFIER = com.yourname.habittracker

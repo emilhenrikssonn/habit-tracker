@@ -1,0 +1,10 @@
+# Xcode
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Local signing config
+Signing.local.xcconfig
+
+.DS_Store

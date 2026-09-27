@@ -18,6 +18,9 @@ targets:
     type: application
     platform: iOS
     deploymentTarget: "17.0"
+    configFiles:
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
     sources:
       - path: HabitTracker
         excludes:
@@ -28,7 +31,6 @@ targets:
       - path: HabitTracker/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.habittracker.app
         INFOPLIST_FILE: HabitTracker/Info.plist
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
@@ -36,8 +38,5 @@ targets:
         DEVELOPMENT_ASSET_PATHS: "\"HabitTracker/Preview Content\""
         ENABLE_PREVIEWS: YES
         TARGETED_DEVICE_FAMILY: "1"
-        CODE_SIGN_STYLE: Automatic
-        CODE_SIGNING_ALLOWED: NO
-        CODE_SIGNING_REQUIRED: NO
         SWIFT_EMIT_LOC_STRINGS: YES
         GENERATE_INFOPLIST_FILE: NO
