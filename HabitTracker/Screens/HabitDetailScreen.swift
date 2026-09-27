@@ -8,6 +8,7 @@ struct HabitDetailScreen: View {
 
     @State private var editing = false
     @State private var selectedBar: Int? = nil
+    @AppStorage("habitChartDays") private var chartDays = 14
 
     var body: some View {
         ScreenScaffold {
@@ -151,16 +152,39 @@ struct HabitDetailScreen: View {
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColor.border, lineWidth: 1))
     }
 
-    private static let chartDays = 14
+    private static let chartRanges = [7, 14, 30, 90]
     private static let barMaxHeight: CGFloat = 100
 
     private var chartBlock: some View {
-        let data = habit.history(days: Self.chartDays)
-        let scale = max(data.map(\.value).max() ?? 0, habit.isQuantified ? habit.dailyGoal : 1, 1)
+        let data = habit.history(days: chartDays)
+        // Scale from past days and the goal only, so logging today never resizes the other bars.
+        // Today's bar is capped at full height if it goes past that.
+        let pastMax = data.dropLast().map(\.value).max() ?? 0
+        let scale = max(pastMax, habit.isQuantified ? habit.dailyGoal * 1.25 : 1, 1)
         let dayFmt = Date.FormatStyle().day().month(.abbreviated)
         return VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: habit.isQuantified ? "\(habit.unitLabel.isEmpty ? "Amount" : habit.unitLabel) per day" : "Kept per day")
-            HStack(alignment: .bottom, spacing: 6) {
+            HStack {
+                SectionLabel(text: habit.isQuantified ? "\(habit.unitLabel.isEmpty ? "Amount" : habit.unitLabel) per day" : "Kept per day")
+                Spacer()
+                HStack(spacing: 0) {
+                    ForEach(Self.chartRanges, id: \.self) { days in
+                        Button {
+                            selectedBar = nil
+                            chartDays = days
+                        } label: {
+                            Text("\(days)d")
+                                .font(AppFont.mono(11, weight: .medium))
+                                .foregroundStyle(chartDays == days ? AppColor.inkOnAccent : AppColor.inkDim)
+                                .padding(.horizontal, 9).padding(.vertical, 5)
+                                .background(Capsule().fill(chartDays == days ? AppColor.accent : Color.clear))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(3)
+                .background(Capsule().fill(AppColor.surface))
+            }
+            HStack(alignment: .bottom, spacing: barSpacing) {
                 ForEach(data.indices, id: \.self) { i in
                     bar(data[i], index: i, scale: scale)
                 }
@@ -189,14 +213,23 @@ struct HabitDetailScreen: View {
         }
     }
 
+    private var barSpacing: CGFloat {
+        switch chartDays {
+        case ...14: return 6
+        case ...30: return 3
+        default: return 1
+        }
+    }
+
     private func bar(_ day: (date: Date, value: Double, kept: Bool), index i: Int, scale: Double) -> some View {
         let selected = selectedBar == i
-        let height = max(3, CGFloat(day.value / scale) * Self.barMaxHeight)
+        let height = max(chartDays > 30 ? 2 : 3, CGFloat(min(day.value / scale, 1)) * Self.barMaxHeight)
         let color: Color = selected ? AppColor.ink : (day.kept ? AppColor.accent : AppColor.accentMid)
-        let bubbleAlignment: Alignment = i < 3 ? .topLeading : (i >= Self.chartDays - 3 ? .topTrailing : .top)
+        let position = Double(i) / Double(max(chartDays - 1, 1))
+        let bubbleAlignment: Alignment = position < 0.2 ? .topLeading : (position > 0.8 ? .topTrailing : .top)
         return VStack(spacing: 0) {
             Spacer(minLength: 0)
-            RoundedRectangle(cornerRadius: 3).fill(color)
+            RoundedRectangle(cornerRadius: chartDays > 30 ? 1 : 3).fill(color)
                 .frame(height: height)
                 .overlay(alignment: bubbleAlignment) {
                     if selected { valueBubble(day).offset(y: -34) }
