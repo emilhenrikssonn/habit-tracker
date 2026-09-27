@@ -32,7 +32,7 @@ enum SeedData {
             ("Exercise", .movement, .time, "min", 30, .days, [1,2,3,4,5], 18, false, "07:00"),
             ("Read", .mind, .amount, "pages", 20, .daily, [1,2,3,4,5,6,7], 0, false, "22:00"),
             ("Sleep by 23:00", .health, .done, "", 1, .daily, [1,2,3,4,5,6,7], 0, false, nil),
-            ("Drink water", .health, .count, "glasses", 8, .daily, [1,2,3,4,5,6,7], 8, true, nil),
+            ("Drink water", .health, .amount, "glasses", 8, .daily, [1,2,3,4,5,6,7], 8, true, nil),
             ("Take vitamins", .health, .done, "", 1, .daily, [1,2,3,4,5,6,7], 1, true, "08:00"),
             ("Stretch", .movement, .time, "min", 10, .daily, [1,2,3,4,5,6,7], 10, true, nil),
             ("No sugar", .quit, .done, "", 1, .daily, [1,2,3,4,5,6,7], 1, true, nil)

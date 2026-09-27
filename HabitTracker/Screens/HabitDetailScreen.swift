@@ -61,7 +61,7 @@ struct HabitDetailScreen: View {
         let track = habit.isQuantified
             ? "\(habit.tracking.display.lowercased()) · \(habit.formatWithUnit(habit.dailyGoal))/day"
             : "done"
-        return "\(habit.category.display) · \(track) · \(habit.scheduleSummary)"
+        return "\(habit.categoryName) · \(track) · \(habit.scheduleSummary)"
     }
 
     private var logCard: some View {

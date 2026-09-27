@@ -10,7 +10,7 @@ extension Habit {
         switch tracking {
         case .done: return ""
         case .time: return unit.isEmpty ? "min" : unit
-        case .count, .amount: return unit
+        case .amount: return unit
         }
     }
 
@@ -28,7 +28,7 @@ extension Habit {
         switch tracking {
         case .done: return []
         case .time: return [1, 5, 15]
-        case .count, .amount: return dailyGoal >= 10 ? [1, 5] : [1]
+        case .amount: return dailyGoal >= 10 ? [1, 5] : [1]
         }
     }
 

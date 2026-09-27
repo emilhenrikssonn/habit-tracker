@@ -21,6 +21,7 @@ final class AppPrefs {
     var perHabitReminderCount: Int = 3
     var displayName: String = "You"
     var tracked: Int = 128
+    var customCategories: [String] = []
 
     init() {}
 

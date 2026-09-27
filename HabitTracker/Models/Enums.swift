@@ -20,12 +20,12 @@ enum HabitType: String, Codable {
 }
 
 enum TrackingType: String, Codable, CaseIterable, Identifiable {
-    case done, count, amount, time
+    // "count" was merged into amount; Habit.tracking reads old "count" habits as .amount.
+    case done, amount, time
     var id: String { rawValue }
     var display: String {
         switch self {
         case .done: return "Done"
-        case .count: return "Count"
         case .amount: return "Amount"
         case .time: return "Time"
         }
@@ -33,16 +33,14 @@ enum TrackingType: String, Codable, CaseIterable, Identifiable {
     var caption: String {
         switch self {
         case .done: return "yes / no"
-        case .count: return "glasses, sets"
-        case .amount: return "km, pages, ml"
+        case .amount: return "pages, glasses, km"
         case .time: return "minutes, timer"
         }
     }
     var hint: String {
         switch self {
         case .done: return "One tap on Today marks the day complete."
-        case .count: return "Tap to add one at a time — reaching the goal completes the day."
-        case .amount: return "Log a measured amount; partial days still show progress."
+        case .amount: return "Tap +1 or log more at once — reaching the goal completes the day."
         case .time: return "Log minutes by hand or run a timer inside the habit."
         }
     }

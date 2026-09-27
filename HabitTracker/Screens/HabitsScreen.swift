@@ -9,10 +9,12 @@ struct HabitsScreen: View {
     private var active: [Habit] { habits.filter { !$0.archived } }
     private var archived: [Habit] { habits.filter { $0.archived } }
 
-    private var grouped: [(HabitCategory, [Habit])] {
-        HabitCategory.allCases.compactMap { cat in
-            let list = active.filter { $0.category == cat }
-            return list.isEmpty ? nil : (cat, list)
+    private var grouped: [(String, [Habit])] {
+        let builtIn = HabitCategory.allCases.map(\.rawValue)
+        let custom = Set(active.map(\.categoryRaw)).subtracting(builtIn).sorted()
+        return (builtIn + custom).compactMap { raw in
+            let list = active.filter { $0.categoryRaw == raw }
+            return list.isEmpty ? nil : (raw, list)
         }
     }
 
@@ -23,7 +25,7 @@ struct HabitsScreen: View {
                 VStack(alignment: .leading, spacing: 0) {
                     addBar
                     ForEach(grouped, id: \.0) { cat, list in
-                        SectionLabel(text: cat.display, color: AppColor.inkMute)
+                        SectionLabel(text: Habit.categoryName(for: cat), color: AppColor.inkMute)
                             .padding(.top, 24).padding(.bottom, 10)
                         ForEach(list, id: \.id) { habit in
                             HRule()
@@ -119,9 +121,8 @@ private struct HabitRow: View {
         let track: String
         switch habit.tracking {
         case .done: track = "Done · every day"
-        case .count: track = "Count · \(Int(habit.dailyGoal)) \(habit.unit)/day · \(habit.scheduleSummary)"
-        case .amount: track = "Amount · \(Int(habit.dailyGoal)) \(habit.unit)/day · \(habit.scheduleSummary)"
-        case .time: track = "Time · \(Int(habit.dailyGoal)) \(habit.unit)/day · \(habit.scheduleSummary)"
+        case .amount, .time:
+            track = "\(habit.tracking.display) · \(habit.formatWithUnit(habit.dailyGoal))/day · \(habit.scheduleSummary)"
         }
         return track
     }

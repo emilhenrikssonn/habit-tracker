@@ -12,7 +12,6 @@ struct CatalogueEntry: Identifiable, Hashable {
     var goalString: String {
         switch tracking {
         case .done: return "done"
-        case .count: return "count · \(Int(goal)) \(unit)/day"
         case .amount: return "amount · \(Int(goal)) \(unit)/day"
         case .time: return "time · \(Int(goal)) \(unit)/day"
         }
@@ -25,7 +24,7 @@ struct CatalogueEntry: Identifiable, Hashable {
 
 enum HabitCatalogue {
     static let entries: [CatalogueEntry] = [
-        .init(name: "Drink water", category: .health, tracking: .count, unit: "glasses", goal: 8, type: .build),
+        .init(name: "Drink water", category: .health, tracking: .amount, unit: "glasses", goal: 8, type: .build),
         .init(name: "Sleep by 23:00", category: .health, tracking: .done, unit: "", goal: 1, type: .build),
         .init(name: "Take vitamins", category: .health, tracking: .done, unit: "", goal: 1, type: .build),
         .init(name: "Exercise", category: .movement, tracking: .time, unit: "min", goal: 30, type: .build),

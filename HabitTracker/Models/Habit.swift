@@ -55,12 +55,19 @@ final class Habit {
         get { HabitCategory(rawValue: categoryRaw) ?? .health }
         set { categoryRaw = newValue.rawValue }
     }
+
+    /// Display name for the habit's category — a built-in one or a custom name.
+    var categoryName: String { Habit.categoryName(for: categoryRaw) }
+
+    static func categoryName(for raw: String) -> String {
+        HabitCategory(rawValue: raw)?.display ?? raw
+    }
     var type: HabitType {
         get { HabitType(rawValue: typeRaw) ?? .build }
         set { typeRaw = newValue.rawValue }
     }
     var tracking: TrackingType {
-        get { TrackingType(rawValue: trackingRaw) ?? .done }
+        get { trackingRaw == "count" ? .amount : (TrackingType(rawValue: trackingRaw) ?? .done) }
         set { trackingRaw = newValue.rawValue }
     }
     var repeatMode: RepeatMode {
@@ -76,7 +83,6 @@ final class Habit {
     var goalString: String {
         switch tracking {
         case .done: return "Done / not done"
-        case .count: return "\(Int(dailyGoal)) \(unit)"
         case .amount: return "\(Int(dailyGoal)) \(unit)"
         case .time: return "\(Int(dailyGoal)) \(unit.isEmpty ? "min" : unit)"
         }

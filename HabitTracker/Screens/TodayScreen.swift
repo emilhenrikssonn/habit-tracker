@@ -212,7 +212,7 @@ private struct TodayListRow: View {
     }
 
     private var subtitle: String {
-        let category = habit.category.display.lowercased()
+        let category = habit.categoryName.lowercased()
         guard habit.isQuantified else { return "Done / not done · \(category)" }
         let value = habit.format(habit.todayLog()?.value ?? 0)
         return "\(value) / \(habit.formatWithUnit(habit.dailyGoal)) · \(category)"

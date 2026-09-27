@@ -8,36 +8,42 @@ struct HabitSetupScreen: View {
     var onClose: () -> Void
 
     @State private var name: String
-    @State private var category: HabitCategory
+    @State private var categoryRaw: String
     @State private var type: HabitType
     @State private var tracking: TrackingType
-    @State private var unit: String
-    @State private var goal: Double
+    // Goal and unit are kept per tracking type, so switching back and forth doesn't lose them.
+    @State private var amountUnit: String
+    @State private var amountGoal: Double
+    @State private var timeGoal: Double
     @State private var repeatMode: RepeatMode = .daily
     @State private var weekdays: Set<Int> = [1,2,3,4,5,6,7]
     @State private var timesPerWeek: Int = 4
     @State private var reminder: String? = "08:00"
+    @State private var pickingCategory = false
 
     init(prefilled: CatalogueEntry?, onClose: @escaping () -> Void) {
         self.prefilled = prefilled
         self.onClose = onClose
+        let tracking = prefilled?.tracking ?? .done
         _name = State(initialValue: prefilled?.name ?? "New habit")
-        _category = State(initialValue: prefilled?.category ?? .health)
+        _categoryRaw = State(initialValue: (prefilled?.category ?? .health).rawValue)
         _type = State(initialValue: prefilled?.type ?? .build)
-        _tracking = State(initialValue: prefilled?.tracking ?? .done)
-        _unit = State(initialValue: prefilled?.unit ?? "")
-        _goal = State(initialValue: prefilled?.goal ?? 1)
+        _tracking = State(initialValue: tracking)
+        _amountUnit = State(initialValue: tracking == .amount ? prefilled?.unit ?? "" : "")
+        _amountGoal = State(initialValue: tracking == .amount ? prefilled?.goal ?? 1 : 1)
+        _timeGoal = State(initialValue: tracking == .time ? prefilled?.goal ?? 30 : 30)
     }
 
     init(editing habit: Habit, onClose: @escaping () -> Void) {
         self.editing = habit
         self.onClose = onClose
         _name = State(initialValue: habit.name)
-        _category = State(initialValue: habit.category)
+        _categoryRaw = State(initialValue: habit.categoryRaw)
         _type = State(initialValue: habit.type)
         _tracking = State(initialValue: habit.tracking)
-        _unit = State(initialValue: habit.unit)
-        _goal = State(initialValue: habit.dailyGoal)
+        _amountUnit = State(initialValue: habit.tracking == .amount ? habit.unit : "")
+        _amountGoal = State(initialValue: habit.tracking == .amount ? habit.dailyGoal : 1)
+        _timeGoal = State(initialValue: habit.tracking == .time ? habit.dailyGoal : 30)
         _repeatMode = State(initialValue: habit.repeatMode)
         _weekdays = State(initialValue: Set(habit.weekdays))
         _timesPerWeek = State(initialValue: habit.timesPerWeek)
@@ -63,6 +69,10 @@ struct HabitSetupScreen: View {
                               onCancel: onClose, onSave: save)
             }
         }
+        .sheet(isPresented: $pickingCategory) {
+            CategoryPickerSheet(selection: $categoryRaw, onClose: { pickingCategory = false })
+                .presentationDetents([.medium, .large])
+        }
     }
 
     private var headerRow: some View {
@@ -79,27 +89,32 @@ struct HabitSetupScreen: View {
     }
 
     private var titleBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             TextField("Habit name", text: $name)
                 .font(AppFont.serif(40))
                 .foregroundStyle(AppColor.ink)
                 .submitLabel(.done)
-            HStack(spacing: 8) {
-                CategoryChip(title: category.display, isActive: true) {
-                    let all = HabitCategory.allCases
-                    category = all[(all.firstIndex(of: category)! + 1) % all.count]
+            HStack(spacing: 10) {
+                CategoryChip(title: Habit.categoryName(for: categoryRaw), isActive: true) { pickingCategory = true }
+                Button { pickingCategory = true } label: {
+                    Text("Change category ›").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
                 }
-                CategoryChip(title: type.display, isActive: false) {
-                    type = type == .build ? .quit : .build
-                }
+                .buttonStyle(.plain)
             }
         }
     }
 
     private var trackingBlock: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(text: "Tracking")
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            HStack {
+                SectionLabel(text: "Tracking")
+                Spacer()
+                HStack(spacing: 6) {
+                    CategoryChip(title: HabitType.build.display, isActive: type == .build) { type = .build }
+                    CategoryChip(title: HabitType.quit.display, isActive: type == .quit) { type = .quit }
+                }
+            }
+            HStack(spacing: 10) {
                 ForEach(TrackingType.allCases) { t in
                     trackingTile(t)
                 }
@@ -114,17 +129,17 @@ struct HabitSetupScreen: View {
     private func trackingTile(_ t: TrackingType) -> some View {
         Button {
             tracking = t
-            if t == .done { goal = 1 }
-            if t == .time && unit.isEmpty { unit = "min" }
         } label: {
             VStack(alignment: .leading, spacing: 4) {
-                Text(t.display).font(AppFont.serif(21))
+                Text(t.display).font(AppFont.serif(20))
                     .foregroundStyle(tracking == t ? AppColor.ink : AppColor.inkDim)
-                Text(t.caption).font(AppFont.mono(11))
+                Text(t.caption).font(AppFont.mono(10))
                     .foregroundStyle(AppColor.inkMute)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 78, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: AppMetrics.inputRadius)
                     .fill(tracking == t ? AppColor.surfaceAccent : AppColor.surface)
@@ -137,44 +152,52 @@ struct HabitSetupScreen: View {
         .buttonStyle(.plain)
     }
 
+    @ViewBuilder
     private var goalBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: "Daily goal")
-            HStack(spacing: 10) {
-                Text("\(Int(goal))")
-                    .font(AppFont.mono(24))
-                    .foregroundStyle(AppColor.ink)
-                if tracking == .done {
-                    Text("time a day").font(AppFont.mono(12)).foregroundStyle(AppColor.inkMute)
-                } else {
-                    TextField("unit", text: $unit)
+        switch tracking {
+        case .done:
+            VStack(alignment: .leading, spacing: 10) {
+                SectionLabel(text: "Daily goal")
+                Text("Mark it done once a day.")
+                    .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
+            }
+        case .time:
+            goalEditor(goal: $timeGoal, step: timeGoal >= 30 ? 5 : 1) {
+                Text("min").font(AppFont.mono(12)).foregroundStyle(AppColor.inkMute)
+            }
+        case .amount:
+            VStack(alignment: .leading, spacing: 10) {
+                goalEditor(goal: $amountGoal, step: amountGoal >= 20 ? 5 : 1) {
+                    TextField("unit", text: $amountUnit, prompt: Text("unit").foregroundStyle(AppColor.inkDim))
                         .font(AppFont.mono(12))
                         .foregroundStyle(AppColor.accent)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                        .frame(maxWidth: 90)
+                        .frame(maxWidth: 110)
+                        .padding(.horizontal, 8).padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 6).stroke(AppColor.accentMid, lineWidth: 1))
                 }
-                Spacer()
-                stepper(sign: "−") { if goal > 1 { goal -= goalStep } }
-                stepper(sign: "+", accent: true) { goal += goalStep }
-            }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: AppMetrics.inputRadius).fill(AppColor.surface))
-            .disabled(tracking == .done)
-            .opacity(tracking == .done ? 0.5 : 1)
-            if tracking != .done {
-                Text("You'll log this habit in \(unitPlaceholder) — tap the unit to change it.")
-                    .font(AppFont.sans(13))
-                    .foregroundStyle(AppColor.inkMute)
+                Text("What do you count? E.g. pages, glasses, km, push-ups.")
+                    .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
             }
         }
     }
 
-    private var goalStep: Double { goal > 20 ? 5 : 1 }
-
-    private var unitPlaceholder: String {
-        let u = unit.trimmingCharacters(in: .whitespaces)
-        return u.isEmpty ? (tracking == .time ? "min" : "units") : u
+    private func goalEditor<Unit: View>(goal: Binding<Double>, step: Double, @ViewBuilder unit: () -> Unit) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: "Daily goal")
+            HStack(spacing: 10) {
+                Text("\(Int(goal.wrappedValue))")
+                    .font(AppFont.mono(24))
+                    .foregroundStyle(AppColor.ink)
+                unit()
+                Spacer()
+                stepper(sign: "−") { goal.wrappedValue = max(1, goal.wrappedValue - step) }
+                stepper(sign: "+", accent: true) { goal.wrappedValue += step }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: AppMetrics.inputRadius).fill(AppColor.surface))
+        }
     }
 
     private func stepper(sign: String, accent: Bool = false, action: @escaping () -> Void) -> some View {
@@ -250,14 +273,19 @@ struct HabitSetupScreen: View {
 
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let trimmedUnit = unit.trimmingCharacters(in: .whitespaces)
-        let h = editing ?? Habit(name: "", category: category, sortIndex: 100)
+        let h = editing ?? Habit(name: "", category: .health, sortIndex: 100)
         h.name = trimmedName.isEmpty ? "New habit" : trimmedName
-        h.category = category
+        h.categoryRaw = categoryRaw
         h.type = type
         h.tracking = tracking
-        h.unit = tracking == .done ? "" : trimmedUnit
-        h.dailyGoal = tracking == .done ? 1 : max(goal, 1)
+        switch tracking {
+        case .done:
+            h.unit = ""; h.dailyGoal = 1
+        case .time:
+            h.unit = "min"; h.dailyGoal = timeGoal
+        case .amount:
+            h.unit = amountUnit.trimmingCharacters(in: .whitespaces); h.dailyGoal = amountGoal
+        }
         h.repeatMode = repeatMode
         h.weekdays = Array(weekdays).sorted()
         h.timesPerWeek = timesPerWeek
@@ -268,6 +296,101 @@ struct HabitSetupScreen: View {
             log.completed = log.value >= h.dailyGoal
         }
         try? ctx.save()
+        onClose()
+    }
+}
+
+/// Built-in categories, custom ones you've created, and a field to add a new one.
+private struct CategoryPickerSheet: View {
+    @Environment(\.modelContext) private var ctx
+    @Query private var prefsList: [AppPrefs]
+    @Query private var habits: [Habit]
+    @Binding var selection: String
+    var onClose: () -> Void
+    @State private var newName = ""
+
+    private var categories: [String] {
+        let builtIn = HabitCategory.allCases.map(\.rawValue)
+        let custom = Set((prefsList.first?.customCategories ?? []) + habits.map(\.categoryRaw))
+            .subtracting(builtIn)
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+        return builtIn + custom
+    }
+
+    var body: some View {
+        ScreenScaffold {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Category").font(AppFont.serif(32)).foregroundStyle(AppColor.ink)
+                    Spacer()
+                    Button(action: onClose) {
+                        Text("Done").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
+                    }.buttonStyle(.plain)
+                }
+                .padding(.top, 22).padding(.bottom, 14)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(categories, id: \.self) { raw in
+                            HRule()
+                            Button {
+                                selection = raw
+                                onClose()
+                            } label: {
+                                HStack {
+                                    Text(Habit.categoryName(for: raw))
+                                        .font(AppFont.serif(21))
+                                        .foregroundStyle(selection == raw ? AppColor.ink : AppColor.inkDim)
+                                    Spacer()
+                                    if selection == raw {
+                                        Image(systemName: "checkmark").foregroundStyle(AppColor.accent)
+                                    }
+                                }
+                                .padding(.vertical, 13)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        HRule()
+                        HStack(spacing: 10) {
+                            TextField("", text: $newName, prompt: Text("New category").foregroundStyle(AppColor.inkDim))
+                                .font(AppFont.serif(21))
+                                .foregroundStyle(AppColor.ink)
+                                .submitLabel(.done)
+                                .onSubmit(addCategory)
+                            Button(action: addCategory) {
+                                Text("Add")
+                                    .font(AppFont.mono(12)).foregroundStyle(AppColor.inkOnAccent)
+                                    .padding(.horizontal, 14).padding(.vertical, 7)
+                                    .background(Capsule().fill(AppColor.accent))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(trimmedNew.isEmpty)
+                            .opacity(trimmedNew.isEmpty ? 0.4 : 1)
+                        }
+                        .padding(.vertical, 13)
+                        HRule()
+                    }
+                }
+            }
+            .padding(.horizontal, AppMetrics.hPadding)
+        }
+    }
+
+    private var trimmedNew: String { newName.trimmingCharacters(in: .whitespaces) }
+
+    private func addCategory() {
+        let name = trimmedNew
+        guard !name.isEmpty else { return }
+        // Reuse a built-in or existing category if the name matches one.
+        if let existing = categories.first(where: { Habit.categoryName(for: $0).caseInsensitiveCompare(name) == .orderedSame }) {
+            selection = existing
+        } else {
+            let prefs = prefsList.first ?? { let p = AppPrefs(); ctx.insert(p); return p }()
+            prefs.customCategories.append(name)
+            try? ctx.save()
+            selection = name
+        }
+        newName = ""
         onClose()
     }
 }
