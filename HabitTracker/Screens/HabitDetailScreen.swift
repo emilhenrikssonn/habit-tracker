@@ -6,6 +6,9 @@ struct HabitDetailScreen: View {
     let habit: Habit
     var onClose: () -> Void
 
+    @State private var editing = false
+    @State private var selectedBar: Int? = nil
+
     var body: some View {
         ScreenScaffold {
             VStack(spacing: 0) {
@@ -23,6 +26,9 @@ struct HabitDetailScreen: View {
                 }
             }
         }
+        .sheet(isPresented: $editing) {
+            HabitSetupScreen(editing: habit, onClose: { editing = false })
+        }
     }
 
     private var headerRow: some View {
@@ -32,7 +38,7 @@ struct HabitDetailScreen: View {
             }.buttonStyle(.plain)
             Spacer()
             Button {
-                // edit stub
+                editing = true
             } label: {
                 Text("Edit").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
             }.buttonStyle(.plain)
@@ -52,31 +58,42 @@ struct HabitDetailScreen: View {
     }
 
     private var metaLine: String {
-        let track: String
-        switch habit.tracking {
-        case .done: track = "done"
-        case .count: track = "count · \(Int(habit.dailyGoal)) \(habit.unit)/day"
-        case .amount: track = "amount · \(Int(habit.dailyGoal)) \(habit.unit)/day"
-        case .time: track = "time · \(Int(habit.dailyGoal)) \(habit.unit)/day"
-        }
+        let track = habit.isQuantified
+            ? "\(habit.tracking.display.lowercased()) · \(habit.formatWithUnit(habit.dailyGoal))/day"
+            : "done"
         return "\(habit.category.display) · \(track) · \(habit.scheduleSummary)"
     }
 
     private var logCard: some View {
         let value = habit.todayLog()?.value ?? 0
-        let goal = habit.dailyGoal
+        let done = habit.todayLog()?.completed == true
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Today \(Int(value)) / \(Int(goal)) \(habit.unit.isEmpty ? "" : habit.unit)")
+                Text(habit.isQuantified
+                     ? "Today \(habit.format(value)) / \(habit.formatWithUnit(habit.dailyGoal))"
+                     : (done ? "Kept today" : "Not done yet"))
                     .font(AppFont.serif(22)).foregroundStyle(AppColor.ink)
                 Spacer()
                 MetaChip(text: "LOG")
             }
-            ThinBar(progress: value / max(goal, 1), height: 6, track: AppColor.border, fill: AppColor.accent)
-            HStack(spacing: 10) {
-                actionPill("+5 min") { addValue(5) }
-                actionPill("+15 min") { addValue(15) }
-                actionPillFilled("Timer") { }
+            if habit.isQuantified {
+                ThinBar(progress: value / max(habit.dailyGoal, 1), height: 6, track: AppColor.border, fill: AppColor.accent)
+                HStack(spacing: 10) {
+                    actionPill("−1") { habit.add(-1, in: ctx) }
+                        .disabled(value <= 0)
+                        .opacity(value <= 0 ? 0.4 : 1)
+                    ForEach(habit.logSteps, id: \.self) { step in
+                        actionPill("+\(habit.format(step))") { habit.add(step, in: ctx) }
+                    }
+                }
+            } else {
+                HStack(spacing: 10) {
+                    if done {
+                        actionPill("Undo") { habit.toggleDone(in: ctx) }
+                    } else {
+                        actionPillFilled("Mark done") { habit.toggleDone(in: ctx) }
+                    }
+                }
             }
         }
         .padding(16)
@@ -88,6 +105,7 @@ struct HabitDetailScreen: View {
         Button(action: action) {
             Text(label)
                 .font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
+                .lineLimit(1)
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(Capsule().stroke(AppColor.accentMid, lineWidth: 1))
         }.buttonStyle(.plain)
@@ -102,65 +120,112 @@ struct HabitDetailScreen: View {
         }.buttonStyle(.plain)
     }
 
-    private func addValue(_ delta: Double) {
-        let today = Calendar.current.startOfDay(for: Date())
-        let log = habit.todayLog() ?? {
-            let l = HabitLog(date: today, value: 0, completed: false)
-            l.habit = habit
-            ctx.insert(l)
-            return l
-        }()
-        log.value += delta
-        if log.value >= habit.dailyGoal { log.completed = true }
-        try? ctx.save()
-    }
-
     private var statsRow: some View {
-        HStack(spacing: 12) {
-            stat("RATE", "83%")
-            stat("AVG", "24 min")
-            stat("STREAK", "6")
-            stat("BEST", "14")
+        let st = habit.stats()
+        let avg = habit.isQuantified
+            ? habit.formatWithUnit((st.average * 10).rounded() / 10)
+            : String(format: "%.1f days", st.average)
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            stat("Rate · 30 days", "\(st.rate)%")
+            stat(habit.isQuantified ? "Avg / day" : "Avg / week", avg)
+            stat("Current streak", days(st.currentStreak))
+            stat("Best streak", days(st.bestStreak))
         }
     }
+
+    private func days(_ n: Int) -> String { n == 1 ? "1 day" : "\(n) days" }
 
     private func stat(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionLabel(text: label)
-            Text(value).font(AppFont.mono(20)).foregroundStyle(AppColor.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(value)
+                .font(AppFont.mono(20)).foregroundStyle(AppColor.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: 72, maxHeight: 72, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 12).fill(AppColor.surface))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppColor.border, lineWidth: 1))
     }
 
+    private static let chartDays = 14
+    private static let barMaxHeight: CGFloat = 100
+
     private var chartBlock: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: "Minutes per day")
-            let vals = (0..<14).map { _ in Int.random(in: 5...35) }
+        let data = habit.history(days: Self.chartDays)
+        let scale = max(data.map(\.value).max() ?? 0, habit.isQuantified ? habit.dailyGoal : 1, 1)
+        let dayFmt = Date.FormatStyle().day().month(.abbreviated)
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: habit.isQuantified ? "\(habit.unitLabel.isEmpty ? "Amount" : habit.unitLabel) per day" : "Kept per day")
             HStack(alignment: .bottom, spacing: 6) {
-                ForEach(vals.indices, id: \.self) { i in
-                    let goal = Int(habit.dailyGoal)
-                    let color: Color = vals[i] >= goal ? AppColor.accent : AppColor.accentMid
-                    RoundedRectangle(cornerRadius: 3).fill(color)
-                        .frame(width: 14, height: CGFloat(vals[i]) * 3)
+                ForEach(data.indices, id: \.self) { i in
+                    bar(data[i], index: i, scale: scale)
                 }
             }
-            .frame(height: 110, alignment: .bottom)
+            .frame(height: Self.barMaxHeight, alignment: .bottom)
+            .overlay(alignment: .bottom) {
+                if habit.isQuantified {
+                    Rectangle()
+                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        .foregroundStyle(AppColor.inkMute.opacity(0.6))
+                        .frame(height: 1)
+                        .offset(y: -CGFloat(habit.dailyGoal / scale) * Self.barMaxHeight)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(.top, 34) // room for the value bubble above the tallest bar
             HStack {
-                Text("13 Sep").font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                Text(data.first!.date.formatted(dayFmt)).font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
                 Spacer()
-                Text("goal 30 min").font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
-                Spacer()
-                Text("26 Sep").font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                if habit.isQuantified {
+                    Text("goal \(habit.formatWithUnit(habit.dailyGoal))").font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                    Spacer()
+                }
+                Text(data.last!.date.formatted(dayFmt)).font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
             }
         }
     }
 
+    private func bar(_ day: (date: Date, value: Double, kept: Bool), index i: Int, scale: Double) -> some View {
+        let selected = selectedBar == i
+        let height = max(3, CGFloat(day.value / scale) * Self.barMaxHeight)
+        let color: Color = selected ? AppColor.ink : (day.kept ? AppColor.accent : AppColor.accentMid)
+        let bubbleAlignment: Alignment = i < 3 ? .topLeading : (i >= Self.chartDays - 3 ? .topTrailing : .top)
+        return VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            RoundedRectangle(cornerRadius: 3).fill(color)
+                .frame(height: height)
+                .overlay(alignment: bubbleAlignment) {
+                    if selected { valueBubble(day).offset(y: -34) }
+                }
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.easeOut(duration: 0.15)) { selectedBar = selected ? nil : i }
+        }
+        .zIndex(selected ? 1 : 0)
+    }
+
+    private func valueBubble(_ day: (date: Date, value: Double, kept: Bool)) -> some View {
+        let value = habit.isQuantified ? habit.formatWithUnit(day.value) : (day.kept ? "kept" : "missed")
+        return VStack(alignment: .leading, spacing: 1) {
+            Text(value).font(AppFont.mono(12, weight: .medium)).foregroundStyle(AppColor.inkOnAccent)
+            Text(day.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+                .font(AppFont.mono(9)).foregroundStyle(AppColor.inkOnAccent.opacity(0.7))
+        }
+        .fixedSize()
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 6).fill(AppColor.accent))
+        .allowsHitTesting(false)
+    }
+
     private var calendarBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: "September")
+            SectionLabel(text: Date().formatted(.dateTime.month(.wide)))
             let cal = Calendar.current
             let today = cal.startOfDay(for: Date())
             let firstOfMonth = cal.date(from: cal.dateComponents([.year,.month], from: today))!

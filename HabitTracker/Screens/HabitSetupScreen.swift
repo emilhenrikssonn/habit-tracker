@@ -4,6 +4,7 @@ import SwiftData
 struct HabitSetupScreen: View {
     @Environment(\.modelContext) private var ctx
     var prefilled: CatalogueEntry?
+    var editing: Habit?
     var onClose: () -> Void
 
     @State private var name: String
@@ -28,6 +29,21 @@ struct HabitSetupScreen: View {
         _goal = State(initialValue: prefilled?.goal ?? 1)
     }
 
+    init(editing habit: Habit, onClose: @escaping () -> Void) {
+        self.editing = habit
+        self.onClose = onClose
+        _name = State(initialValue: habit.name)
+        _category = State(initialValue: habit.category)
+        _type = State(initialValue: habit.type)
+        _tracking = State(initialValue: habit.tracking)
+        _unit = State(initialValue: habit.unit)
+        _goal = State(initialValue: habit.dailyGoal)
+        _repeatMode = State(initialValue: habit.repeatMode)
+        _weekdays = State(initialValue: Set(habit.weekdays))
+        _timesPerWeek = State(initialValue: habit.timesPerWeek)
+        _reminder = State(initialValue: habit.reminder)
+    }
+
     var body: some View {
         ScreenScaffold {
             VStack(spacing: 0) {
@@ -43,7 +59,7 @@ struct HabitSetupScreen: View {
                     }
                     .padding(.horizontal, AppMetrics.hPadding)
                 }
-                CancelSaveBar(cancelText: "Cancel", saveText: "Save habit",
+                CancelSaveBar(cancelText: "Cancel", saveText: editing == nil ? "Save habit" : "Save changes",
                               onCancel: onClose, onSave: save)
             }
         }
@@ -55,7 +71,7 @@ struct HabitSetupScreen: View {
                 Text("‹ back").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
             }.buttonStyle(.plain)
             Spacer()
-            SectionLabel(text: "how to track it")
+            SectionLabel(text: editing == nil ? "how to track it" : "edit habit")
         }
         .padding(.horizontal, AppMetrics.hPadding)
         .padding(.top, 18)
@@ -64,11 +80,15 @@ struct HabitSetupScreen: View {
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(name)
+            TextField("Habit name", text: $name)
                 .font(AppFont.serif(40))
                 .foregroundStyle(AppColor.ink)
+                .submitLabel(.done)
             HStack(spacing: 8) {
-                CategoryChip(title: category.display, isActive: true) {}
+                CategoryChip(title: category.display, isActive: true) {
+                    let all = HabitCategory.allCases
+                    category = all[(all.firstIndex(of: category)! + 1) % all.count]
+                }
                 CategoryChip(title: type.display, isActive: false) {
                     type = type == .build ? .quit : .build
                 }
@@ -94,6 +114,8 @@ struct HabitSetupScreen: View {
     private func trackingTile(_ t: TrackingType) -> some View {
         Button {
             tracking = t
+            if t == .done { goal = 1 }
+            if t == .time && unit.isEmpty { unit = "min" }
         } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(t.display).font(AppFont.serif(21))
@@ -122,16 +144,37 @@ struct HabitSetupScreen: View {
                 Text("\(Int(goal))")
                     .font(AppFont.mono(24))
                     .foregroundStyle(AppColor.ink)
-                Text(unit.isEmpty ? tracking.caption : unit)
-                    .font(AppFont.mono(12))
-                    .foregroundStyle(AppColor.inkMute)
+                if tracking == .done {
+                    Text("time a day").font(AppFont.mono(12)).foregroundStyle(AppColor.inkMute)
+                } else {
+                    TextField("unit", text: $unit)
+                        .font(AppFont.mono(12))
+                        .foregroundStyle(AppColor.accent)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .frame(maxWidth: 90)
+                }
                 Spacer()
-                stepper(sign: "−") { if goal > 1 { goal -= 1 } }
-                stepper(sign: "+", accent: true) { goal += 1 }
+                stepper(sign: "−") { if goal > 1 { goal -= goalStep } }
+                stepper(sign: "+", accent: true) { goal += goalStep }
             }
             .padding(.horizontal, 14).padding(.vertical, 12)
             .background(RoundedRectangle(cornerRadius: AppMetrics.inputRadius).fill(AppColor.surface))
+            .disabled(tracking == .done)
+            .opacity(tracking == .done ? 0.5 : 1)
+            if tracking != .done {
+                Text("You'll log this habit in \(unitPlaceholder) — tap the unit to change it.")
+                    .font(AppFont.sans(13))
+                    .foregroundStyle(AppColor.inkMute)
+            }
         }
+    }
+
+    private var goalStep: Double { goal > 20 ? 5 : 1 }
+
+    private var unitPlaceholder: String {
+        let u = unit.trimmingCharacters(in: .whitespaces)
+        return u.isEmpty ? (tracking == .time ? "min" : "units") : u
     }
 
     private func stepper(sign: String, accent: Bool = false, action: @escaping () -> Void) -> some View {
@@ -206,20 +249,24 @@ struct HabitSetupScreen: View {
     }
 
     private func save() {
-        let h = Habit(
-            name: name,
-            category: category,
-            type: type,
-            tracking: tracking,
-            unit: unit,
-            dailyGoal: goal,
-            repeatMode: repeatMode,
-            weekdays: Array(weekdays).sorted(),
-            timeOfDay: "Anytime",
-            reminder: reminder,
-            sortIndex: 100
-        )
-        ctx.insert(h)
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let trimmedUnit = unit.trimmingCharacters(in: .whitespaces)
+        let h = editing ?? Habit(name: "", category: category, sortIndex: 100)
+        h.name = trimmedName.isEmpty ? "New habit" : trimmedName
+        h.category = category
+        h.type = type
+        h.tracking = tracking
+        h.unit = tracking == .done ? "" : trimmedUnit
+        h.dailyGoal = tracking == .done ? 1 : max(goal, 1)
+        h.repeatMode = repeatMode
+        h.weekdays = Array(weekdays).sorted()
+        h.timesPerWeek = timesPerWeek
+        h.reminder = reminder
+        if editing == nil { ctx.insert(h) }
+        // Today's completion follows the (possibly new) goal.
+        if let log = h.todayLog(), h.isQuantified {
+            log.completed = log.value >= h.dailyGoal
+        }
         try? ctx.save()
         onClose()
     }

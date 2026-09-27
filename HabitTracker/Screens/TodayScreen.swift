@@ -139,7 +139,9 @@ struct TodayScreen: View {
                     toggleDone(habit)
                 }, onAction: {
                     onOpenHabit(habit)
-                }, onQuickAdd: {})
+                }, onQuickAdd: {
+                    quickAdd(habit)
+                })
             }
             if !completedToday.isEmpty { HRule() }
             Spacer(minLength: 24)
@@ -150,11 +152,14 @@ struct TodayScreen: View {
     // MARK: Grid
     private var gridBody: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            ForEach(unfinished, id: \.id) { habit in
-                TodayGridTile(habit: habit, done: false) { toggleDone(habit) }
-            }
-            ForEach(completedToday, id: \.id) { habit in
-                TodayGridTile(habit: habit, done: true) { toggleDone(habit) }
+            ForEach(unfinished + completedToday, id: \.id) { habit in
+                TodayGridTile(
+                    habit: habit,
+                    done: habit.todayLog()?.completed == true,
+                    onToggle: { toggleDone(habit) },
+                    onOpen: { onOpenHabit(habit) },
+                    onQuickAdd: { quickAdd(habit) }
+                )
             }
         }
         .padding(.horizontal, AppMetrics.hPadding)
@@ -162,45 +167,11 @@ struct TodayScreen: View {
     }
 
     private func toggleDone(_ habit: Habit) {
-        let today = Calendar.current.startOfDay(for: Date())
-        if let log = habit.todayLog() {
-            log.completed.toggle()
-            if log.completed && habit.tracking != .done && log.value < habit.dailyGoal {
-                log.value = habit.dailyGoal
-            }
-            if !log.completed {
-                log.value = 0
-            }
-        } else {
-            let l = HabitLog(date: today, value: habit.dailyGoal, completed: true)
-            l.habit = habit
-            ctx.insert(l)
-        }
-        try? ctx.save()
+        habit.toggleDone(in: ctx)
     }
 
     private func quickAdd(_ habit: Habit) {
-        let today = Calendar.current.startOfDay(for: Date())
-        let log = habit.todayLog() ?? {
-            let l = HabitLog(date: today, value: 0, completed: false)
-            l.habit = habit
-            ctx.insert(l)
-            return l
-        }()
-        switch habit.tracking {
-        case .done:
-            log.completed = true
-        case .count:
-            log.value += 1
-            if log.value >= habit.dailyGoal { log.completed = true }
-        case .time:
-            log.value += 5
-            if log.value >= habit.dailyGoal { log.completed = true }
-        case .amount:
-            log.value += max(1, habit.dailyGoal * 0.1)
-            if log.value >= habit.dailyGoal { log.completed = true }
-        }
-        try? ctx.save()
+        if habit.isQuantified { habit.add(1, in: ctx) } else { habit.toggleDone(in: ctx) }
     }
 }
 
@@ -218,6 +189,7 @@ private struct TodayListRow: View {
             }
             .buttonStyle(.plain)
 
+            Button(action: onAction) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(habit.name)
                     .font(AppFont.serif(done ? 19 : 22))
@@ -230,6 +202,9 @@ private struct TodayListRow: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
 
             trailingView
         }
@@ -237,14 +212,10 @@ private struct TodayListRow: View {
     }
 
     private var subtitle: String {
-        let value = Int(habit.todayLog()?.value ?? 0)
-        let goal = Int(habit.dailyGoal)
-        switch habit.tracking {
-        case .done: return "Done / not done · \(habit.category.display.lowercased())"
-        case .count: return "\(value) / \(goal) \(habit.unit) · \(habit.category.display.lowercased())"
-        case .amount: return "\(value) / \(goal) \(habit.unit) · \(habit.category.display.lowercased())"
-        case .time: return "\(value) / \(goal) \(habit.unit.isEmpty ? "min" : habit.unit)utes · \(habit.category.display.lowercased())"
-        }
+        let category = habit.category.display.lowercased()
+        guard habit.isQuantified else { return "Done / not done · \(category)" }
+        let value = habit.format(habit.todayLog()?.value ?? 0)
+        return "\(value) / \(habit.formatWithUnit(habit.dailyGoal)) · \(category)"
     }
 
     private var progress: Double {
@@ -255,32 +226,12 @@ private struct TodayListRow: View {
 
     @ViewBuilder
     private var trailingView: some View {
-        if done {
-            Text(trailingText)
-                .font(AppFont.mono(11))
-                .foregroundStyle(AppColor.inkMute)
+        if habit.isQuantified {
+            actionPill("+1", action: onQuickAdd)
+        } else if done {
+            Text("kept").font(AppFont.mono(11)).foregroundStyle(AppColor.inkMute)
         } else {
-            switch habit.tracking {
-            case .done:
-                Text("tap").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
-            case .time:
-                actionPill("+5", action: onQuickAdd)
-            case .count:
-                actionPill("+1", action: onQuickAdd)
-            case .amount:
-                actionPill("log", action: onAction)
-            }
-        }
-    }
-
-    private var trailingText: String {
-        let value = Int(habit.todayLog()?.value ?? habit.dailyGoal)
-        let goal = Int(habit.dailyGoal)
-        switch habit.tracking {
-        case .done: return "kept"
-        case .count: return "\(value)/\(goal) \(habit.unit)"
-        case .amount: return "\(value)/\(goal) \(habit.unit)"
-        case .time: return "\(value)/\(goal) \(habit.unit.isEmpty ? "min" : habit.unit)"
+            Text("tap").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
         }
     }
 
@@ -299,7 +250,9 @@ private struct TodayListRow: View {
 private struct TodayGridTile: View {
     let habit: Habit
     let done: Bool
-    var onTap: () -> Void
+    var onToggle: () -> Void
+    var onOpen: () -> Void
+    var onQuickAdd: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -310,7 +263,7 @@ private struct TodayGridTile: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 Spacer()
-                Button(action: onTap) { CheckCircle(done: done) }
+                Button(action: onToggle) { CheckCircle(done: done).padding(4) }
                     .buttonStyle(.plain)
             }
             Spacer(minLength: 16)
@@ -318,13 +271,25 @@ private struct TodayGridTile: View {
                 Text(valueString)
                     .font(AppFont.mono(22))
                     .foregroundStyle(done ? AppColor.accentSoft : AppColor.ink)
-                if !unitString.isEmpty {
-                    Text(unitString)
+                if !habit.unitLabel.isEmpty {
+                    Text(habit.unitLabel)
                         .font(AppFont.mono(11))
                         .foregroundStyle(AppColor.inkMute)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                if habit.isQuantified {
+                    Button(action: onQuickAdd) {
+                        Text("+1")
+                            .font(AppFont.mono(12))
+                            .foregroundStyle(AppColor.accent)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(Capsule().stroke(AppColor.accentMid, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            if habit.tracking != .done {
+            if habit.isQuantified {
                 ThinBar(
                     progress: (habit.todayLog()?.value ?? 0) / max(habit.dailyGoal, 1),
                     fill: done ? AppColor.accentSoft : AppColor.accent
@@ -342,21 +307,12 @@ private struct TodayGridTile: View {
             RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
                 .stroke(done ? AppColor.borderAccent : AppColor.border, lineWidth: 1)
         )
+        .contentShape(RoundedRectangle(cornerRadius: AppMetrics.tileRadius))
+        .onTapGesture(perform: onOpen)
     }
 
     private var valueString: String {
-        let value = Int(habit.todayLog()?.value ?? 0)
-        let goal = Int(habit.dailyGoal)
-        switch habit.tracking {
-        case .done: return done ? "kept" : "—"
-        case .count, .amount, .time: return "\(value)/\(goal)"
-        }
-    }
-    private var unitString: String {
-        switch habit.tracking {
-        case .done: return ""
-        case .time: return habit.unit.isEmpty ? "min" : habit.unit
-        default: return habit.unit
-        }
+        guard habit.isQuantified else { return done ? "kept" : "—" }
+        return "\(habit.format(habit.todayLog()?.value ?? 0))/\(habit.format(habit.dailyGoal))"
     }
 }

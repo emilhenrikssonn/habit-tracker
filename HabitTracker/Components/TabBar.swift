@@ -12,6 +12,15 @@ enum RootTab: Int, CaseIterable, Identifiable {
         case .settings: return "SET"
         }
     }
+    var icon: String {
+        switch self {
+        case .today: return "sun.max"
+        case .habits: return "list.bullet"
+        case .stats: return "chart.bar"
+        case .friends: return "person.2"
+        case .settings: return "gearshape"
+        }
+    }
     var shortLabel: String {
         switch self {
         case .today: return "TOD"
@@ -39,8 +48,8 @@ struct AppTabBar: View {
                 tabItem(.settings)
             }
             .padding(.horizontal, AppMetrics.hPadding)
-            .padding(.top, 14)
-            .padding(.bottom, 26)
+            .padding(.top, 10)
+            .padding(.bottom, 22)
         }
         .background(AppColor.bg)
     }
@@ -50,27 +59,31 @@ struct AppTabBar: View {
         Button {
             selection = tab
         } label: {
-            Text(tab.label)
-                .font(AppFont.mono(10, weight: .medium))
-                .tracking(10 * 0.16)
-                .foregroundStyle(selection == tab ? AppColor.ink : AppColor.inkDim)
-                .frame(maxWidth: .infinity)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .allowsTightening(true)
+            VStack(spacing: 5) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 15, weight: selection == tab ? .semibold : .regular))
+                    .frame(height: 18)
+                Text(tab.label)
+                    .font(AppFont.mono(10, weight: .medium))
+                    .tracking(10 * 0.16)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .allowsTightening(true)
+            }
+            .foregroundStyle(selection == tab ? AppColor.ink : AppColor.inkDim)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
     private var fab: some View {
         Button(action: onPlus) {
-            ZStack {
-                Circle().fill(AppColor.accent).frame(width: 38, height: 38)
-                Text("+")
-                    .font(AppFont.serif(24))
-                    .foregroundStyle(AppColor.inkOnAccent)
-                    .offset(y: -1)
-            }
+            Image(systemName: "plus")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(AppColor.inkOnAccent)
+                .frame(width: 42, height: 42)
+                .background(Circle().fill(AppColor.accent))
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
