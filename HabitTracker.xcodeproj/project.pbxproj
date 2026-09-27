@@ -19,6 +19,7 @@
 		4A8398B039054297D0B7869A /* RowGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93D07E9F8C911755CF2553C /* RowGroup.swift */; };
 		56CF8A2660908994D9B6BDD3 /* Chips.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB34DD28AC5140D8C52E80A7 /* Chips.swift */; };
 		5FA01D13FCE5B0A7B1CF9622 /* HabitLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEEC9B51918F5D2CCC4735BD /* HabitLog.swift */; };
+		63E4BD62F7B622DBD22D93AA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF9D38D77EB078C801B84738 /* Assets.xcassets */; };
 		64740DFEDC1FD233F99FA8A7 /* FriendsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF027991BE2A1ADEB4FE593 /* FriendsScreen.swift */; };
 		6608ED1AD09D7CAD2B0B3CC9 /* HabitsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7313F727B51C609341C4D328 /* HabitsScreen.swift */; };
 		6AF11FAC87837A215EB6D08D /* HabitDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 337B1B6744788EBB71DB977C /* HabitDetailScreen.swift */; };
@@ -74,7 +75,8 @@
 		EB34DD28AC5140D8C52E80A7 /* Chips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chips.swift; sourceTree = "<group>"; };
 		EBF027991BE2A1ADEB4FE593 /* FriendsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsScreen.swift; sourceTree = "<group>"; };
 		FA89B49696CB52D519867261 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
-		"TEMP_1D4052BF-43A0-4F93-8ECA-F37E9ACD98AE" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		FF9D38D77EB078C801B84738 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		"TEMP_FCF6211D-F1EB-43B4-BDF1-1DF99C570041" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -117,6 +119,7 @@
 				2CEDC5272953824332C89E86 /* Models */,
 				4DD9340E6CD742F33F7323A7 /* Screens */,
 				C31E65DCE16EF06192345FA0 /* Services */,
+				FF9D38D77EB078C801B84738 /* Assets.xcassets */,
 				004D5DF10775A860CE77FD04 /* HabitTrackerApp.swift */,
 				2733A4577B239251B52458FE /* Info.plist */,
 			);
@@ -173,10 +176,10 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_B59F5F75-0297-4437-B40D-4C3C5AEA443A" /* habit-tracker */ = {
+		"TEMP_169F9AF2-D633-4E79-A9D8-38F753DB0FE9" /* habit-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_1D4052BF-43A0-4F93-8ECA-F37E9ACD98AE" /* Signing.xcconfig */,
+				"TEMP_FCF6211D-F1EB-43B4-BDF1-1DF99C570041" /* Signing.xcconfig */,
 			);
 			path = "habit-tracker";
 			sourceTree = "<group>";
@@ -189,6 +192,7 @@
 			buildConfigurationList = 15BD32C286F29901DB14CA1F /* Build configuration list for PBXNativeTarget "HabitTracker" */;
 			buildPhases = (
 				D6C29FDFD6FF722BF6177787 /* Sources */,
+				7FC83F90F2F600B7D101FA7B /* Resources */,
 			);
 			buildRules = (
 			);
@@ -235,6 +239,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		7FC83F90F2F600B7D101FA7B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63E4BD62F7B622DBD22D93AA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		D6C29FDFD6FF722BF6177787 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -279,7 +294,7 @@
 /* Begin XCBuildConfiguration section */
 		3789F377332BFE621A8243FC /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1D4052BF-43A0-4F93-8ECA-F37E9ACD98AE" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_FCF6211D-F1EB-43B4-BDF1-1DF99C570041" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -369,7 +384,7 @@
 		};
 		8906BDEADDB4EC1C0043F70C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1D4052BF-43A0-4F93-8ECA-F37E9ACD98AE" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_FCF6211D-F1EB-43B4-BDF1-1DF99C570041" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
