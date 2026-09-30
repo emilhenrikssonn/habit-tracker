@@ -26,9 +26,8 @@ targets:
         excludes:
           - "Preview Content/**"
           - "Resources/**"
-    resources:
-      - path: HabitTracker/Preview Content
       - path: HabitTracker/Resources
+        buildPhase: resources
     settings:
       base:
         INFOPLIST_FILE: HabitTracker/Info.plist
