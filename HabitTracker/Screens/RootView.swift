@@ -11,7 +11,6 @@ struct RootView: View {
     }()
     @State private var addHabitPresented: Bool = ProcessInfo.processInfo.environment["OPEN_ADD"] == "1"
     @State private var openHabit: Habit? = nil
-    @State private var openShareFor: Habit? = nil
     @State private var notificationsPresented: Bool = ProcessInfo.processInfo.environment["OPEN_NOTIFS"] == "1"
 
     var body: some View {
@@ -28,8 +27,6 @@ struct RootView: View {
                         )
                     case .stats:
                         StatisticsScreen()
-                    case .friends:
-                        FriendsScreen(onShare: { openShareFor = $0 })
                     case .settings:
                         SettingsScreen(onOpenNotifications: { notificationsPresented = true })
                     }
@@ -44,9 +41,6 @@ struct RootView: View {
         }
         .sheet(item: $openHabit) { habit in
             HabitDetailScreen(habit: habit, onClose: { openHabit = nil })
-        }
-        .sheet(item: $openShareFor) { habit in
-            ShareHabitScreen(habit: habit, onClose: { openShareFor = nil })
         }
         .sheet(isPresented: $notificationsPresented) {
             NotificationsScreen(onClose: { notificationsPresented = false })

@@ -1,14 +1,13 @@
 import SwiftUI
 
 enum RootTab: Int, CaseIterable, Identifiable {
-    case today, habits, stats, friends, settings
+    case today, habits, stats, settings
     var id: Int { rawValue }
     var label: String {
         switch self {
         case .today: return "TODAY"
         case .habits: return "HABITS"
         case .stats: return "STATS"
-        case .friends: return "FRIENDS"
         case .settings: return "SET"
         }
     }
@@ -17,7 +16,6 @@ enum RootTab: Int, CaseIterable, Identifiable {
         case .today: return "sun.max"
         case .habits: return "list.bullet"
         case .stats: return "chart.bar"
-        case .friends: return "person.2"
         case .settings: return "gearshape"
         }
     }
@@ -26,7 +24,6 @@ enum RootTab: Int, CaseIterable, Identifiable {
         case .today: return "TOD"
         case .habits: return "HAB"
         case .stats: return "STA"
-        case .friends: return "FRI"
         case .settings: return "SET"
         }
     }
@@ -44,7 +41,6 @@ struct AppTabBar: View {
                 tabItem(.habits)
                 fab
                 tabItem(.stats)
-                tabItem(.friends)
                 tabItem(.settings)
             }
             .padding(.horizontal, AppMetrics.hPadding)
