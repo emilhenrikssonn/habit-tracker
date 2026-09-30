@@ -16,11 +16,16 @@ struct HabitSetupScreen: View {
     @State private var amountGoal: Double
     @State private var timeGoal: Double
     @State private var repeatMode: RepeatMode = .daily
-    @State private var weekdays: Set<Int> = [1,2,3,4,5,6,7]
     @State private var timesPerWeek: Int = 4
+    @State private var datesOfMonth: Set<Int> = []
+    @State private var startDate: Date = Calendar.current.startOfDay(for: Date())
+    @State private var restWeekdays: Set<Int> = []
+    @State private var restDates: Set<Date> = []
     @State private var reminder: String? = nil
     @State private var pickingCategory = false
     @State private var pickingReminder = false
+    @State private var pickingStart = false
+    @State private var pickingRestDates = false
 
     init(prefilled: CatalogueEntry?, onClose: @escaping () -> Void) {
         self.prefilled = prefilled
@@ -45,10 +50,19 @@ struct HabitSetupScreen: View {
         _amountUnit = State(initialValue: habit.tracking == .amount ? habit.unit : "")
         _amountGoal = State(initialValue: habit.tracking == .amount ? habit.dailyGoal : 1)
         _timeGoal = State(initialValue: habit.tracking == .time ? habit.dailyGoal : 30)
-        _repeatMode = State(initialValue: habit.repeatMode)
-        _weekdays = State(initialValue: Set(habit.weekdays))
         _timesPerWeek = State(initialValue: habit.timesPerWeek)
+        _datesOfMonth = State(initialValue: Set(habit.datesOfMonth))
+        _startDate = State(initialValue: Calendar.current.startOfDay(for: habit.activeStart))
+        _restDates = State(initialValue: Set(habit.restDates))
         _reminder = State(initialValue: habit.reminder)
+        // Older habits picked the weekdays they were due on; that's now "daily" with the other days as rest days.
+        if habit.repeatMode == .days {
+            _repeatMode = State(initialValue: .daily)
+            _restWeekdays = State(initialValue: Set(habit.restWeekdays).union(Set(1...7).subtracting(habit.weekdays)))
+        } else {
+            _repeatMode = State(initialValue: habit.repeatMode)
+            _restWeekdays = State(initialValue: Set(habit.restWeekdays))
+        }
     }
 
     var body: some View {
@@ -61,6 +75,8 @@ struct HabitSetupScreen: View {
                         trackingBlock
                         goalBlock
                         repeatBlock
+                        startBlock
+                        restBlock
                         detailRows
                         Spacer(minLength: 24)
                     }
@@ -69,6 +85,13 @@ struct HabitSetupScreen: View {
                 CancelSaveBar(cancelText: "Cancel", saveText: editing == nil ? "Save habit" : "Save changes",
                               onCancel: onClose, onSave: save)
             }
+        }
+        .sheet(isPresented: $pickingStart) {
+            StartDateSheet(selected: startDate, onPick: { startDate = $0 }, onClose: { pickingStart = false })
+        }
+        .sheet(isPresented: $pickingRestDates) {
+            RestDatesSheet(dates: $restDates, restWeekdays: restWeekdays, start: startDate,
+                           onClose: { pickingRestDates = false })
         }
         .sheet(isPresented: $pickingReminder) {
             TimePickerSheet(title: "Reminder", initial: reminder ?? "08:00",
@@ -222,23 +245,18 @@ struct HabitSetupScreen: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionLabel(text: "Repeat")
             HStack(spacing: 8) {
-                ForEach(RepeatMode.allCases) { m in
-                    CategoryChip(title: m.display, isActive: repeatMode == m) { repeatMode = m }
-                }
-            }
-            switch repeatMode {
-            case .daily:
-                Text("Every day of the week, all year.")
-                    .font(AppFont.sans(13))
-                    .foregroundStyle(AppColor.inkMute)
-            case .days:
-                HStack(spacing: 6) {
-                    ForEach(1...7, id: \.self) { i in
-                        DayPill(letter: Habit.dayLetter(i), isActive: weekdays.contains(i)) {
-                            if weekdays.contains(i) { weekdays.remove(i) } else { weekdays.insert(i) }
+                ForEach([RepeatMode.daily, .weekly, .dates]) { m in
+                    CategoryChip(title: m.display, isActive: repeatMode == m) {
+                        repeatMode = m
+                        if m == .dates && datesOfMonth.isEmpty {
+                            datesOfMonth = [Calendar.current.component(.day, from: startDate)]
                         }
                     }
                 }
+            }
+            switch repeatMode {
+            case .daily, .days:
+                hint("Every day, except rest days.")
             case .weekly:
                 HStack(spacing: 10) {
                     Text("\(timesPerWeek) × per week")
@@ -249,24 +267,98 @@ struct HabitSetupScreen: View {
                 }
                 .padding(.horizontal, 14).padding(.vertical, 12)
                 .background(RoundedRectangle(cornerRadius: AppMetrics.inputRadius).fill(AppColor.surface))
+                hint("Shows on Today until you've done it \(timesPerWeek) \(timesPerWeek == 1 ? "time" : "times") that week.")
             case .dates:
-                DisclosureRow(title: "1 · 8 · 15 · 22 of the month",
-                              titleFont: AppFont.serif(19),
-                              trailing: "pick")
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
+                    ForEach(1...31, id: \.self) { day in
+                        let on = datesOfMonth.contains(day)
+                        Button {
+                            if on { if datesOfMonth.count > 1 { datesOfMonth.remove(day) } } else { datesOfMonth.insert(day) }
+                        } label: {
+                            Text("\(day)")
+                                .font(AppFont.mono(12, weight: .medium))
+                                .foregroundStyle(on ? AppColor.accentSoftLight : AppColor.inkDim)
+                                .frame(maxWidth: .infinity).frame(height: 36)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(on ? AppColor.accentMid : AppColor.surface))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                hint("Due on these days each month. Months without a day skip it.")
             }
+        }
+    }
+
+    private func hint(_ text: String) -> some View {
+        Text(text)
+            .font(AppFont.sans(13))
+            .foregroundStyle(AppColor.inkMute)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var today: Date { Calendar.current.startOfDay(for: Date()) }
+    private var tomorrow: Date { Calendar.current.date(byAdding: .day, value: 1, to: today)! }
+
+    private var startBlock: some View {
+        let cal = Calendar.current
+        let isToday = cal.isDate(startDate, inSameDayAs: today)
+        let isTomorrow = cal.isDate(startDate, inSameDayAs: tomorrow)
+        let other = !isToday && !isTomorrow
+        return VStack(alignment: .leading, spacing: 12) {
+            SectionLabel(text: "Starts")
+            HStack(spacing: 8) {
+                CategoryChip(title: "Today", isActive: isToday) { startDate = today }
+                CategoryChip(title: "Tomorrow", isActive: isTomorrow) { startDate = tomorrow }
+                CategoryChip(title: other ? startDate.formatted(.dateTime.day().month(.abbreviated)) : "Pick date",
+                             isActive: other) { pickingStart = true }
+            }
+            if other {
+                Button { pickingStart = true } label: {
+                    Text("Change date ›").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var restBlock: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionLabel(text: "Rest days")
+            hint("Days off each week")
+            HStack(spacing: 6) {
+                ForEach(Habit.orderedWeekdays, id: \.self) { day in
+                    DayPill(letter: Habit.dayLetter(day), isActive: restWeekdays.contains(day)) {
+                        if restWeekdays.contains(day) {
+                            restWeekdays.remove(day)
+                        } else if restWeekdays.count < 6 {
+                            restWeekdays.insert(day)
+                        }
+                    }
+                }
+            }
+            VStack(spacing: 0) {
+                HRule()
+                DisclosureRow(title: "Rest dates",
+                              trailing: restDatesSummary,
+                              trailingColor: restDates.isEmpty ? AppColor.inkDim : AppColor.accent,
+                              subtitle: "Single days off, like a trip or a sick day") {
+                    pickingRestDates = true
+                }
+            }
+            hint("Rest days don't count against your streak.")
+        }
+    }
+
+    private var restDatesSummary: String {
+        switch restDates.count {
+        case 0: return "pick"
+        case 1: return "1 date"
+        default: return "\(restDates.count) dates"
         }
     }
 
     private var detailRows: some View {
         VStack(spacing: 0) {
-            HRule()
-            DisclosureRow(title: "Active period",
-                          titleFont: AppFont.serif(20),
-                          trailing: "26 Sep – 31 Dec")
-            HRule()
-            DisclosureRow(title: "Time of day",
-                          titleFont: AppFont.serif(20),
-                          trailing: "Morning · pause wk 29–31")
             HRule()
             DisclosureRow(title: "Reminder",
                           titleFont: AppFont.serif(20),
@@ -294,8 +386,12 @@ struct HabitSetupScreen: View {
             h.unit = amountUnit.trimmingCharacters(in: .whitespaces); h.dailyGoal = amountGoal
         }
         h.repeatMode = repeatMode
-        h.weekdays = Array(weekdays).sorted()
+        h.weekdays = Array(1...7) // weekdays off are rest days now
         h.timesPerWeek = timesPerWeek
+        h.datesOfMonth = datesOfMonth.sorted()
+        h.activeStart = startDate
+        h.restWeekdays = restWeekdays.sorted()
+        h.restDates = restDates.sorted()
         h.reminder = reminder
         if editing == nil { ctx.insert(h) }
         // Today's completion follows the (possibly new) goal.
@@ -409,5 +505,80 @@ private struct CategoryPickerSheet: View {
         }
         newName = ""
         onClose()
+    }
+}
+
+/// Month calendar for choosing the day a habit starts.
+private struct StartDateSheet: View {
+    var onPick: (Date) -> Void
+    var onClose: () -> Void
+    @State private var selected: Date
+    @State private var month: Date
+
+    init(selected: Date, onPick: @escaping (Date) -> Void, onClose: @escaping () -> Void) {
+        self.onPick = onPick
+        self.onClose = onClose
+        _selected = State(initialValue: selected)
+        _month = State(initialValue: selected)
+    }
+
+    var body: some View {
+        CalendarSheet(title: "Start date",
+                      subtitle: "First day it's due: \(selected.formatted(.dateTime.weekday(.wide).day().month(.wide)))",
+                      onDone: { onPick(selected); onClose() }) {
+            MonthCalendar(month: $month, dayStyle: style, onTap: { selected = $0 })
+        }
+    }
+
+    private func style(_ date: Date) -> CalendarDayStyle {
+        let cal = Calendar.current
+        if cal.isDate(date, inSameDayAs: selected) {
+            return CalendarDayStyle(fill: AppColor.accent, text: AppColor.inkOnAccent)
+        }
+        if cal.isDateInToday(date) {
+            return CalendarDayStyle(stroke: AppColor.accentMid)
+        }
+        return CalendarDayStyle(text: date < cal.startOfDay(for: Date()) ? AppColor.inkDim : AppColor.ink)
+    }
+}
+
+/// Month calendar for tapping single days off on and off.
+private struct RestDatesSheet: View {
+    @Binding var dates: Set<Date>
+    let restWeekdays: Set<Int>
+    let start: Date
+    var onClose: () -> Void
+    @State private var month = Date()
+
+    var body: some View {
+        CalendarSheet(title: "Rest dates",
+                      subtitle: dates.isEmpty ? "Tap days to take them off." : "\(dates.count) \(dates.count == 1 ? "day" : "days") off. Tap again to remove.",
+                      onDone: onClose,
+                      onClear: dates.isEmpty ? nil : { dates.removeAll() }) {
+            MonthCalendar(month: $month, dayStyle: style, onTap: toggle)
+        }
+    }
+
+    private func toggle(_ date: Date) {
+        let day = Calendar.current.startOfDay(for: date)
+        guard !restWeekdays.contains(ClockTime.weekday(of: day)) else { return }
+        if let existing = dates.first(where: { Calendar.current.isDate($0, inSameDayAs: day) }) {
+            dates.remove(existing)
+        } else {
+            dates.insert(day)
+        }
+    }
+
+    private func style(_ date: Date) -> CalendarDayStyle {
+        let cal = Calendar.current
+        if restWeekdays.contains(ClockTime.weekday(of: date)) {
+            return CalendarDayStyle(fill: .clear, text: AppColor.dimOff)
+        }
+        if dates.contains(where: { cal.isDate($0, inSameDayAs: date) }) {
+            return CalendarDayStyle(fill: AppColor.accentMid, text: AppColor.accentSoftLight)
+        }
+        let beforeStart = date < cal.startOfDay(for: start)
+        return CalendarDayStyle(text: beforeStart ? AppColor.inkDim : AppColor.ink,
+                                stroke: cal.isDateInToday(date) ? AppColor.accentMid : nil)
     }
 }

@@ -13,16 +13,18 @@ struct TodayScreen: View {
     private var viewStyle: HomeViewStyle { viewStyleOverride ?? prefs?.defaultView ?? .list }
 
     private var activeHabits: [Habit] { habits.filter { !$0.archived } }
+    /// Only what's due today: started, not a rest day, and not already done enough times this week.
+    private var dueToday: [Habit] { activeHabits.filter { $0.isDue(on: Date()) } }
 
     private var completedToday: [Habit] {
-        activeHabits.filter { $0.todayLog()?.completed == true }
+        dueToday.filter { $0.todayLog()?.completed == true }
     }
     private var unfinished: [Habit] {
-        activeHabits.filter { $0.todayLog()?.completed != true }
+        dueToday.filter { $0.todayLog()?.completed != true }
     }
     private var percent: Int {
-        guard !activeHabits.isEmpty else { return 0 }
-        return Int((Double(completedToday.count) / Double(activeHabits.count)) * 100)
+        guard !dueToday.isEmpty else { return 0 }
+        return Int((Double(completedToday.count) / Double(dueToday.count)) * 100)
     }
 
     var body: some View {
@@ -30,6 +32,8 @@ struct TodayScreen: View {
             header
             if activeHabits.isEmpty {
                 emptyState
+            } else if dueToday.isEmpty {
+                restState
             } else {
                 segmentBar
                 controlRow
@@ -39,6 +43,21 @@ struct TodayScreen: View {
                 .scrollIndicators(.hidden)
             }
         }
+    }
+
+    private var restState: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HRule().padding(.bottom, 16)
+            Text("Nothing due today")
+                .font(AppFont.serif(30))
+                .foregroundStyle(AppColor.ink)
+            Text("It's a rest day for all your habits. Enjoy it.")
+                .font(AppFont.sans(15))
+                .foregroundStyle(AppColor.inkDim)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .padding(.horizontal, AppMetrics.hPadding)
     }
 
     private var emptyState: some View {
@@ -70,12 +89,12 @@ struct TodayScreen: View {
                         .minimumScaleFactor(0.6)
                 }
                 Spacer()
-                if !activeHabits.isEmpty {
+                if !dueToday.isEmpty {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("\(percent)%")
                             .font(AppFont.mono(26))
                             .foregroundStyle(AppColor.accent)
-                        Text("\(completedToday.count) / \(activeHabits.count) kept")
+                        Text("\(completedToday.count) / \(dueToday.count) kept")
                             .font(AppFont.mono(11))
                             .foregroundStyle(AppColor.inkMute)
                     }

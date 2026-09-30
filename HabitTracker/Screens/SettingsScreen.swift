@@ -12,6 +12,8 @@ struct SettingsScreen: View {
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
     @State private var editingName = false
     @State private var nameDraft = ""
+    @State private var exportFile: ExportFile? = nil
+    @AppStorage("weekStart") private var weekStart = 1
 
     private var prefs: AppPrefs {
         if let p = prefsList.first { return p }
@@ -45,19 +47,27 @@ struct SettingsScreen: View {
                     }
                     HRule()
 
-                    SectionLabel(text: "Streaks").padding(.top, 24)
-                    HRule().padding(.top, 8)
-                    DisclosureRow(title: "Rest days", trailing: "\(prefs.restDaysPerMonth) / month")
-                    HRule()
-
                     SectionLabel(text: "App").padding(.top, 24)
                     HRule().padding(.top, 8)
-                    DisclosureRow(title: "Default view", trailing: prefs.defaultView == .list ? "List" : "Grid")
+                    DisclosureRow(title: "Default view", trailing: prefs.defaultView == .list ? "List" : "Grid",
+                                  subtitle: "How Today opens", showChevron: false) {
+                        prefs.defaultView = prefs.defaultView == .list ? .grid : .list
+                        try? ctx.save()
+                    }
                     HRule()
-                    DisclosureRow(title: "Week starts", trailing: prefs.weekStart == 1 ? "Monday" : "Sunday")
+                    DisclosureRow(title: "Week starts", trailing: weekStart == 7 ? "Sunday" : "Monday",
+                                  subtitle: "Calendars, weekly goals and stats", showChevron: false) {
+                        weekStart = weekStart == 7 ? 1 : 7
+                    }
                     HRule()
-                    DisclosureRow(title: "Export & backup", trailing: "CSV")
+                    DisclosureRow(title: "Export data", trailing: "CSV",
+                                  subtitle: "Every habit and log, as a spreadsheet") {
+                        exportFile = DataExport.csvFile(in: ctx).map(ExportFile.init)
+                    }
                     HRule()
+                    Text("Tap Default view or Week starts to switch.")
+                        .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                        .padding(.top, 10)
 
                     Spacer(minLength: 24)
                 }
@@ -67,6 +77,9 @@ struct SettingsScreen: View {
         .task { notificationStatus = await NotificationScheduler.status() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { notificationStatus = await NotificationScheduler.status() } }
+        }
+        .sheet(item: $exportFile) { file in
+            ShareSheet(items: [file.url])
         }
         .alert("Your name", isPresented: $editingName) {
             TextField("Name", text: $nameDraft)

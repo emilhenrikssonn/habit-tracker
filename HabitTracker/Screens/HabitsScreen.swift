@@ -6,6 +6,8 @@ struct HabitsScreen: View {
     var onAdd: () -> Void
     var onOpenHabit: (Habit) -> Void
 
+    @State private var showingArchived = false
+
     private var active: [Habit] { habits.filter { !$0.archived } }
     private var archived: [Habit] { habits.filter { $0.archived } }
 
@@ -34,14 +36,15 @@ struct HabitsScreen: View {
                         HRule()
                     }
                     Button {
-                        // no-op stub
+                        showingArchived = true
                     } label: {
                         HStack {
                             Text("Archived habits").font(AppFont.serif(20)).foregroundStyle(AppColor.inkDim)
                             Spacer()
-                            Text("›").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
+                            Text(archived.isEmpty ? "›" : "\(archived.count) ›").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
                         }
                         .padding(.vertical, 15)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     HRule()
@@ -49,6 +52,9 @@ struct HabitsScreen: View {
                 }
                 .padding(.horizontal, AppMetrics.hPadding)
             }
+        }
+        .sheet(isPresented: $showingArchived) {
+            ArchivedHabitsScreen(onClose: { showingArchived = false })
         }
     }
 
@@ -108,9 +114,9 @@ private struct HabitRow: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                Text("\(completion)% ›")
+                Text(notStarted ? "– ›" : "\(completion)% ›")
                     .font(AppFont.mono(12))
-                    .foregroundStyle(completion >= 80 ? AppColor.accent : AppColor.inkDim)
+                    .foregroundStyle(!notStarted && completion >= 80 ? AppColor.accent : AppColor.inkDim)
             }
             .padding(.vertical, 15)
             .contentShape(Rectangle())
@@ -118,20 +124,16 @@ private struct HabitRow: View {
         .buttonStyle(.plain)
     }
     private var meta: String {
-        let track: String
-        switch habit.tracking {
-        case .done: track = "Done · every day"
-        case .amount, .time:
-            track = "\(habit.tracking.display) · \(habit.formatWithUnit(habit.dailyGoal))/day · \(habit.scheduleSummary)"
+        let goal = habit.isQuantified ? "\(habit.tracking.display) · \(habit.formatWithUnit(habit.dailyGoal))/day" : "Done"
+        let start = Calendar.current.startOfDay(for: habit.activeStart)
+        if start > Calendar.current.startOfDay(for: Date()) {
+            return "\(goal) · starts \(start.formatted(.dateTime.day().month(.abbreviated)))"
         }
-        return track
+        return "\(goal) · \(habit.scheduleSummary)"
     }
-    private var completion: Int {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        guard let from = cal.date(byAdding: .day, value: -29, to: today) else { return 0 }
-        let logs = habit.logs.filter { $0.date >= from && $0.date <= today }
-        let complete = logs.filter { $0.completed }.count
-        return logs.isEmpty ? 0 : Int(Double(complete) / Double(logs.count) * 100)
+    private var notStarted: Bool {
+        Calendar.current.startOfDay(for: habit.activeStart) > Calendar.current.startOfDay(for: Date())
     }
+    /// Share of due days kept over the last 30 days.
+    private var completion: Int { habit.stats().rate }
 }

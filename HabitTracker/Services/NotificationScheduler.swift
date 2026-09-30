@@ -67,7 +67,7 @@ enum NotificationScheduler {
         for offset in 0..<daysAhead {
             guard let day = cal.date(byAdding: .day, value: offset, to: today) else { continue }
             let isToday = offset == 0
-            let due = habits.filter { $0.isScheduled(on: day) }
+            let due = habits.filter { $0.isDue(on: day) }
             // Future days have nothing logged yet, so everything due is still open.
             let open = due.filter { !(isToday && $0.todayLog(on: day)?.completed == true) }
 
@@ -134,7 +134,7 @@ enum NotificationScheduler {
         var due = 0, kept = 0
         for offset in 0..<7 {
             guard let day = cal.date(byAdding: .day, value: -offset, to: today) else { continue }
-            for habit in habits where habit.isScheduled(on: day) && habit.createdAt < cal.date(byAdding: .day, value: 1, to: day)! {
+            for habit in habits where habit.isDue(on: day) {
                 due += 1
                 if habit.todayLog(on: day)?.completed == true { kept += 1 }
             }

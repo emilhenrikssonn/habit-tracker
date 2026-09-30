@@ -7,6 +7,8 @@ struct HabitDetailScreen: View {
     var onClose: () -> Void
 
     @State private var editing = false
+    @State private var confirmingArchive = false
+    @State private var calendarMonth = Date()
     @State private var selectedBar: Int? = nil
     @AppStorage("habitChartDays") private var chartDays = 14
 
@@ -21,6 +23,7 @@ struct HabitDetailScreen: View {
                         statsRow
                         chartBlock
                         calendarBlock
+                        archiveBlock
                         Spacer(minLength: 24)
                     }
                     .padding(.horizontal, AppMetrics.hPadding)
@@ -29,6 +32,12 @@ struct HabitDetailScreen: View {
         }
         .sheet(isPresented: $editing) {
             HabitSetupScreen(editing: habit, onClose: { editing = false })
+        }
+        .confirmationDialog("Archive \(habit.name)?", isPresented: $confirmingArchive, titleVisibility: .visible) {
+            Button("Archive") { archive() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("It leaves Today, Stats and reminders. Its history is kept, and you can reactivate it from Habits → Archived.")
         }
     }
 
@@ -300,41 +309,63 @@ struct HabitDetailScreen: View {
 
     private var calendarBlock: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: Date().formatted(.dateTime.month(.wide)))
-            let cal = Calendar.current
-            let today = cal.startOfDay(for: Date())
-            let firstOfMonth = cal.date(from: cal.dateComponents([.year,.month], from: today))!
-            let range = cal.range(of: .day, in: .month, for: firstOfMonth)!
-            let firstWeekday = cal.component(.weekday, from: firstOfMonth) // Sun=1..Sat=7
-            let offset = (firstWeekday + 5) % 7 // shift to Mon=0
-            let cells: [Int?] = (0..<offset).map { _ in nil } + range.map { $0 }
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(38), spacing: 6), count: 7), spacing: 6) {
-                ForEach(0..<cells.count, id: \.self) { i in
-                    if let day = cells[i] {
-                        let date = cal.date(byAdding: .day, value: day-1, to: firstOfMonth)!
-                        calendarCell(day: day, date: date)
-                    } else {
-                        Color.clear.frame(width: 26, height: 26)
-                    }
-                }
+            SectionLabel(text: "Calendar")
+            MonthCalendar(month: $calendarMonth, dayStyle: calendarStyle)
+            HStack(spacing: 14) {
+                legend(AppColor.calendarKept, "kept")
+                legend(AppColor.surface, "missed")
+                legend(.clear, "rest / not due", stroke: AppColor.border)
             }
+            .padding(.top, 4)
         }
     }
 
-    private func calendarCell(day: Int, date: Date) -> some View {
+    private func legend(_ color: Color, _ label: String, stroke: Color? = nil) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 3).fill(color)
+                .overlay { if let stroke { RoundedRectangle(cornerRadius: 3).stroke(stroke, lineWidth: 1) } }
+                .frame(width: 12, height: 12)
+            Text(label).font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+        }
+    }
+
+    private func calendarStyle(_ date: Date) -> CalendarDayStyle {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let isToday = cal.isDate(date, inSameDayAs: today)
-        let log = habit.logs.first { cal.isDate($0.date, inSameDayAs: date) }
-        let kept = log?.completed ?? false
-        let color: Color
-        if isToday { color = AppColor.accent }
-        else if kept { color = AppColor.calendarKept }
-        else { color = AppColor.surface }
-        return Text("\(day)")
-            .font(AppFont.mono(11))
-            .foregroundStyle(isToday ? AppColor.inkOnAccent : AppColor.ink)
-            .frame(width: 26, height: 26)
-            .background(RoundedRectangle(cornerRadius: 6).fill(color))
+        let kept = habit.todayLog(on: date)?.completed == true
+        let scheduled = habit.isScheduled(on: date)
+        if cal.isDate(date, inSameDayAs: today) {
+            return kept || scheduled
+                ? CalendarDayStyle(fill: AppColor.accent, text: AppColor.inkOnAccent)
+                : CalendarDayStyle(fill: .clear, text: AppColor.accent, stroke: AppColor.accent)
+        }
+        if kept { return CalendarDayStyle(fill: AppColor.calendarKept) }
+        if !scheduled {
+            return CalendarDayStyle(fill: .clear, text: AppColor.dimOff, stroke: AppColor.border)
+        }
+        if date > today { return CalendarDayStyle(fill: .clear, text: AppColor.inkDim) }
+        return CalendarDayStyle()
+    }
+
+    private var archiveBlock: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HRule()
+            SecondaryButton(title: "Archive habit", color: AppColor.inkDim, borderColor: AppColor.borderStrong) {
+                confirmingArchive = true
+            }
+            .padding(.top, 12)
+            Text("For habits you're done with. They're hidden from Today and Stats but kept, so you can bring them back.")
+                .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func archive() {
+        habit.archived = true
+        habit.timerStartedAt = nil
+        try? ctx.save()
+        let ctx = ctx
+        Task { await NotificationScheduler.reschedule(in: ctx) }
+        onClose()
     }
 }

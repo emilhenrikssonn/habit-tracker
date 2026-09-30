@@ -14,9 +14,14 @@ final class Habit {
     var weekdays: [Int] = [1,2,3,4,5,6,7]
     var timesPerWeek: Int = 4
     var datesOfMonth: [Int] = []
+    /// First day the habit is due. Days before it don't count in stats.
     var activeStart: Date = Date()
     var activeEnd: Date? = nil
     var timeOfDay: String = "Anytime"
+    /// Weekdays (Monday=1…Sunday=7) the habit is never due.
+    var restWeekdays: [Int] = []
+    /// Specific days off, stored as start of day.
+    var restDates: [Date] = []
     var reminder: String? = nil
     var archived: Bool = false
     var createdAt: Date = Date()
@@ -51,6 +56,7 @@ final class Habit {
         self.timeOfDay = timeOfDay
         self.reminder = reminder
         self.sortIndex = sortIndex
+        self.activeStart = Calendar.current.startOfDay(for: Date())
     }
 
     var category: HabitCategory {
@@ -91,15 +97,30 @@ final class Habit {
     }
 
     var scheduleSummary: String {
+        let base: String
         switch repeatMode {
-        case .daily: return "every day"
+        case .daily: base = "every day"
         case .days:
-            if Set(weekdays) == Set(1...5) { return "Mon–Fri" }
-            if Set(weekdays) == Set([6,7]) { return "weekends" }
-            return weekdays.sorted().map { Habit.dayLetter($0) }.joined()
-        case .weekly: return "\(timesPerWeek) × per week"
-        case .dates: return "on dates"
+            if Set(weekdays) == Set(1...5) { base = "Mon–Fri" }
+            else if Set(weekdays) == Set([6,7]) { base = "weekends" }
+            else { base = weekdays.sorted().map { Habit.dayLetter($0) }.joined() }
+        case .weekly: base = "\(timesPerWeek) × per week"
+        case .dates:
+            base = datesOfMonth.isEmpty ? "no dates" : "monthly on " + datesOfMonth.sorted().map(String.init).joined(separator: ", ")
         }
+        guard !restWeekdays.isEmpty else { return base }
+        let off = Habit.orderedWeekdays.filter(restWeekdays.contains).map(Habit.dayShort).joined(separator: ", ")
+        return repeatMode == .daily ? "every day but \(off)" : "\(base) · off \(off)"
+    }
+
+    /// Weekdays in display order, following the week-start setting.
+    static var orderedWeekdays: [Int] { weekStartsOnSunday ? [7, 1, 2, 3, 4, 5, 6] : Array(1...7) }
+
+    /// Shared with @AppStorage("weekStart") in Settings: 1 = Monday, 7 = Sunday.
+    static var weekStartsOnSunday: Bool { UserDefaults.standard.integer(forKey: "weekStart") == 7 }
+
+    static func dayShort(_ n: Int) -> String {
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][(n - 1 + 7) % 7]
     }
 
     static func dayLetter(_ n: Int) -> String {

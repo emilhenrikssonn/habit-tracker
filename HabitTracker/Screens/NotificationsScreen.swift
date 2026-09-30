@@ -135,7 +135,7 @@ struct NotificationOptions: View {
                           isOn: bind(\.weeklyReportEnabled))
                 if prefs.weeklyReportEnabled {
                     HStack(spacing: 6) {
-                        ForEach(1...7, id: \.self) { day in
+                        ForEach(Habit.orderedWeekdays, id: \.self) { day in
                             DayPill(letter: Habit.dayLetter(day), isActive: prefs.weeklyReportWeekday == day) {
                                 bind(\.weeklyReportWeekday).wrappedValue = day
                             }

@@ -92,10 +92,45 @@ extension Habit {
 
     // MARK: Schedule & stats
 
+    func isRestDay(_ date: Date) -> Bool {
+        let cal = Calendar.current
+        return restWeekdays.contains(ClockTime.weekday(of: date))
+            || restDates.contains { cal.isDate($0, inSameDayAs: date) }
+    }
+
+    /// Whether the calendar rules put the habit on this day: started, not a rest day, and matching its repeat.
     func isScheduled(on date: Date) -> Bool {
-        guard repeatMode == .days else { return true }
-        let weekday = Calendar.current.component(.weekday, from: date) // Sun=1..Sat=7
-        return weekdays.contains((weekday + 5) % 7 + 1)                 // Mon=1..Sun=7
+        let cal = Calendar.current
+        guard cal.startOfDay(for: date) >= cal.startOfDay(for: activeStart), !isRestDay(date) else { return false }
+        switch repeatMode {
+        case .daily, .weekly: return true
+        case .days: return weekdays.contains(ClockTime.weekday(of: date))
+        case .dates: return datesOfMonth.contains(cal.component(.day, from: date))
+        }
+    }
+
+    /// Scheduled, and for "× per week" habits only until that week's target has been reached.
+    func isDue(on date: Date) -> Bool { isDue(on: date, byDay: logsByDay) }
+
+    private func isDue(on date: Date, byDay: [Date: HabitLog]) -> Bool {
+        guard isScheduled(on: date) else { return false }
+        guard repeatMode == .weekly else { return true }
+        let cal = Calendar.current
+        let day = cal.startOfDay(for: date)
+        var d = Habit.startOfWeek(containing: day)
+        var kept = 0
+        while d < day {
+            if byDay[d]?.completed == true { kept += 1 }
+            d = cal.date(byAdding: .day, value: 1, to: d)!
+        }
+        return kept < timesPerWeek
+    }
+
+    static func startOfWeek(containing date: Date) -> Date {
+        let weekday = ClockTime.weekday(of: date)
+        let back = weekStartsOnSunday ? weekday % 7 : weekday - 1
+        let cal = Calendar.current
+        return cal.date(byAdding: .day, value: -back, to: cal.startOfDay(for: date))!
     }
 
     private var logsByDay: [Date: HabitLog] {
@@ -122,11 +157,11 @@ extension Habit {
         let byDay = logsByDay
         let kept: (Date) -> Bool = { byDay[$0]?.completed == true }
 
-        // Every day from the first log to today; today only counts once it's kept.
+        // Every due day from the first log to today; today only counts once it's kept.
         var days: [Date] = []
         var d = firstDay
         while d <= today {
-            if isScheduled(on: d) && (d < today || kept(d)) { days.append(d) }
+            if isDue(on: d, byDay: byDay) && (d < today || kept(d)) { days.append(d) }
             d = cal.date(byAdding: .day, value: 1, to: d)!
         }
 
@@ -155,6 +190,23 @@ extension Habit {
         }
 
         return Stats(rate: rate, average: average, currentStreak: current, bestStreak: best)
+    }
+
+    /// Every due day from `start` to `end` (inclusive) and whether it was kept.
+    /// Today only counts once it's kept, and nothing after today counts.
+    func dueDays(from start: Date, to end: Date, today: Date = Date()) -> [(date: Date, kept: Bool)] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: today)
+        let last = min(cal.startOfDay(for: end), today)
+        let byDay = logsByDay
+        var result: [(date: Date, kept: Bool)] = []
+        var d = cal.startOfDay(for: start)
+        while d <= last {
+            let kept = byDay[d]?.completed == true
+            if isDue(on: d, byDay: byDay) && (d < today || kept) { result.append((d, kept)) }
+            d = cal.date(byAdding: .day, value: 1, to: d)!
+        }
+        return result
     }
 
     /// Values for the last `count` days, oldest first. Done habits report 1 for kept, 0 otherwise.

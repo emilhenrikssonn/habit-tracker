@@ -11,8 +11,6 @@ final class AppPrefs {
     var hasOnboarded: Bool = false
     var displayName: String = "You"
     var defaultViewRaw: String = HomeViewStyle.list.rawValue
-    var weekStart: Int = 1 // Monday
-    var restDaysPerMonth: Int = 2
     var customCategories: [String] = []
 
     // Notifications. Times are "HH:mm"; weekdays are Monday=1…Sunday=7.
