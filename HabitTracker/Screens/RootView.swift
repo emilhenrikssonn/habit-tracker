@@ -2,6 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct RootView: View {
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.scenePhase) private var scenePhase
+    @Query private var prefsList: [AppPrefs]
+
     @State private var tab: RootTab = {
         if let tabArg = ProcessInfo.processInfo.environment["START_TAB"],
            let i = Int(tabArg), let t = RootTab(rawValue: i) {
@@ -14,12 +18,28 @@ struct RootView: View {
     @State private var notificationsPresented: Bool = ProcessInfo.processInfo.environment["OPEN_NOTIFS"] == "1"
 
     var body: some View {
+        Group {
+            if let prefs = prefsList.first, !prefs.hasOnboarded {
+                OnboardingScreen(prefs: prefs)
+                    .transition(.opacity)
+            } else {
+                main.transition(.opacity)
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Rebuild notifications from the latest logs whenever the app opens or leaves the screen.
+            guard phase != .inactive else { return }
+            Task { await NotificationScheduler.reschedule(in: ctx) }
+        }
+    }
+
+    private var main: some View {
         ScreenScaffold {
             VStack(spacing: 0) {
                 Group {
                     switch tab {
                     case .today:
-                        TodayScreen(onOpenHabit: { openHabit = $0 })
+                        TodayScreen(onOpenHabit: { openHabit = $0 }, onAdd: { addHabitPresented = true })
                     case .habits:
                         HabitsScreen(
                             onAdd: { addHabitPresented = true },

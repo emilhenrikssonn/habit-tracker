@@ -7,6 +7,7 @@ struct TodayScreen: View {
     @Query private var prefsList: [AppPrefs]
     @State private var viewStyleOverride: HomeViewStyle? = nil
     var onOpenHabit: (Habit) -> Void
+    var onAdd: () -> Void
 
     private var prefs: AppPrefs? { prefsList.first }
     private var viewStyle: HomeViewStyle { viewStyleOverride ?? prefs?.defaultView ?? .list }
@@ -27,13 +28,34 @@ struct TodayScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            segmentBar
-            controlRow
-            ScrollView {
-                if viewStyle == .list { listBody } else { gridBody }
+            if activeHabits.isEmpty {
+                emptyState
+            } else {
+                segmentBar
+                controlRow
+                ScrollView {
+                    if viewStyle == .list { listBody } else { gridBody }
+                }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
         }
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HRule().padding(.bottom, 16)
+            Text("Nothing to track yet")
+                .font(AppFont.serif(30))
+                .foregroundStyle(AppColor.ink)
+            Text("Add a habit and it shows up here every day it's due. Tap the circle to mark it done.")
+                .font(AppFont.sans(15))
+                .foregroundStyle(AppColor.inkDim)
+                .fixedSize(horizontal: false, vertical: true)
+            PrimaryButton(title: "Add your first habit", action: onAdd)
+                .padding(.top, 10)
+            Spacer()
+        }
+        .padding(.horizontal, AppMetrics.hPadding)
     }
 
     private var header: some View {
@@ -48,13 +70,15 @@ struct TodayScreen: View {
                         .minimumScaleFactor(0.6)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("\(percent)%")
-                        .font(AppFont.mono(26))
-                        .foregroundStyle(AppColor.accent)
-                    Text("\(completedToday.count) / \(activeHabits.count) kept")
-                        .font(AppFont.mono(11))
-                        .foregroundStyle(AppColor.inkMute)
+                if !activeHabits.isEmpty {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("\(percent)%")
+                            .font(AppFont.mono(26))
+                            .foregroundStyle(AppColor.accent)
+                        Text("\(completedToday.count) / \(activeHabits.count) kept")
+                            .font(AppFont.mono(11))
+                            .foregroundStyle(AppColor.inkMute)
+                    }
                 }
             }
             .padding(.horizontal, AppMetrics.hPadding)

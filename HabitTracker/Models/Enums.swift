@@ -2,13 +2,14 @@ import Foundation
 import SwiftUI
 
 enum HabitCategory: String, Codable, CaseIterable, Identifiable {
-    case health, movement, mind, quit
+    case health, movement, mind, focus, quit
     var id: String { rawValue }
     var display: String {
         switch self {
         case .health: return "Health"
         case .movement: return "Movement"
         case .mind: return "Mind"
+        case .focus: return "Focus"
         case .quit: return "Quit"
         }
     }

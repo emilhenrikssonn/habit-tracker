@@ -18,8 +18,9 @@ struct HabitSetupScreen: View {
     @State private var repeatMode: RepeatMode = .daily
     @State private var weekdays: Set<Int> = [1,2,3,4,5,6,7]
     @State private var timesPerWeek: Int = 4
-    @State private var reminder: String? = "08:00"
+    @State private var reminder: String? = nil
     @State private var pickingCategory = false
+    @State private var pickingReminder = false
 
     init(prefilled: CatalogueEntry?, onClose: @escaping () -> Void) {
         self.prefilled = prefilled
@@ -68,6 +69,12 @@ struct HabitSetupScreen: View {
                 CancelSaveBar(cancelText: "Cancel", saveText: editing == nil ? "Save habit" : "Save changes",
                               onCancel: onClose, onSave: save)
             }
+        }
+        .sheet(isPresented: $pickingReminder) {
+            TimePickerSheet(title: "Reminder", initial: reminder ?? "08:00",
+                            onSave: { reminder = $0 },
+                            onRemove: reminder == nil ? nil : { reminder = nil },
+                            onClose: { pickingReminder = false })
         }
         .sheet(isPresented: $pickingCategory) {
             CategoryPickerSheet(selection: $categoryRaw, onClose: { pickingCategory = false })
@@ -265,7 +272,7 @@ struct HabitSetupScreen: View {
                           titleFont: AppFont.serif(20),
                           trailing: reminder ?? "off",
                           trailingColor: reminder == nil ? AppColor.inkDim : AppColor.accent) {
-                reminder = reminder == nil ? "08:00" : nil
+                pickingReminder = true
             }
             HRule()
         }
@@ -295,7 +302,17 @@ struct HabitSetupScreen: View {
         if let log = h.todayLog(), h.isQuantified {
             log.completed = log.value >= h.dailyGoal
         }
+        if reminder != nil, let prefs = try? ctx.fetch(FetchDescriptor<AppPrefs>()).first {
+            // Setting a time on a habit means wanting its reminders.
+            prefs.habitRemindersEnabled = true
+        }
         try? ctx.save()
+        let ctx = ctx
+        let wantsReminder = reminder != nil
+        Task {
+            if wantsReminder { await NotificationScheduler.requestPermission() }
+            await NotificationScheduler.reschedule(in: ctx)
+        }
         onClose()
     }
 }

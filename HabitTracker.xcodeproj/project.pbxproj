@@ -8,8 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		07BE1CDB495E028DA4ED5E28 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BEF1AD62BB1488E356A032 /* Enums.swift */; };
+		17442D72941917B27BF0BA23 /* ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115941B367C4A53271505FD2 /* ClockTime.swift */; };
 		17A1983B76F10790B740291F /* NotificationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51884F92A14CDD437FF03E59 /* NotificationsScreen.swift */; };
 		199081B46046C24F20969D4E /* TodayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AF215710299F97F846CA7C4 /* TodayScreen.swift */; };
+		1E20F0EA8086698E3BD9F385 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 778A27E32B5EC79090457798 /* JetBrainsMono-Regular.ttf */; };
+		21B7D5C4E7FF9C1702498BF5 /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4568233B529B74A050023507 /* InstrumentSerif-Regular.ttf */; };
 		258E90A541CB0298235DD005 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 510BEEA8F122E30E55C40BA5 /* Buttons.swift */; };
 		2A6D1C5AD98416C6C5769829 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6328D2EB1D8564176F733BAA /* Colors.swift */; };
 		2C4CF9CFF4C5EAE4094E9F80 /* SeedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA89B49696CB52D519867261 /* SeedData.swift */; };
@@ -26,12 +29,17 @@
 		776A2481C35F3368FFFF1141 /* Habit+Tracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */; };
 		7C923DBB1E3CEC6AA858BA8A /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */; };
 		8FD490931E9356CD4D7E247D /* HabitTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004D5DF10775A860CE77FD04 /* HabitTrackerApp.swift */; };
+		914D19804D4A749F29AFEE06 /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D46FD911D775C3528AC32AF7 /* InstrumentSerif-Italic.ttf */; };
 		9CC9E37B2710AA319660FCD6 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 442350E3AD412D3B8D451230 /* Typography.swift */; };
 		AC0CC1C935707A7C84BC7118 /* Habit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757134E23848D6632FD1EA11 /* Habit.swift */; };
 		ACE583262AA0C3844E405E84 /* StatisticsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0D7D23AFC446A072A0F1D1 /* StatisticsScreen.swift */; };
 		ADDF2D1230BB94DCD4386EFB /* HabitCatalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1144D024E0E2E3CD191193D /* HabitCatalogue.swift */; };
+		B5C2D03D1F483269E7FBAF99 /* TimePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 255CEF362F6E5595B4FAA85C /* TimePicker.swift */; };
+		BBB0E859C81AFB7FC8E3BD93 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5740D3F62B38C923D77F498 /* NotificationScheduler.swift */; };
 		C3BA20FEB57DFBF33385AA7E /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723CF53D841CC0F07D109079 /* ProgressBar.swift */; };
 		C7CFABC4105B959863040F61 /* AddHabitScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967F21BCBE01495F4ED07A7E /* AddHabitScreen.swift */; };
+		D5810D717ADEDC21D3D076DB /* OnboardingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C45FB60814ED39B467A2CD1 /* OnboardingScreen.swift */; };
+		D935F228E03B693D4B716AC0 /* Karla-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1510CF27017DC9549A8A563B /* Karla-Regular.ttf */; };
 		F467C2C46331D0E92809FC1C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C2DE5CBC676B2300613B4B /* RootView.swift */; };
 		F488FB0EB3E4079BD660A8DE /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E9FDFECADEAF8DBEB3A9B6 /* Layout.swift */; };
 		FD02A6F95D30D16059CE66B6 /* AppPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7432C94F8D8F4678FE645C1D /* AppPrefs.swift */; };
@@ -39,13 +47,18 @@
 
 /* Begin PBXFileReference section */
 		004D5DF10775A860CE77FD04 /* HabitTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerApp.swift; sourceTree = "<group>"; };
+		115941B367C4A53271505FD2 /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTime.swift; sourceTree = "<group>"; };
+		1510CF27017DC9549A8A563B /* Karla-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Karla-Regular.ttf"; sourceTree = "<group>"; };
 		1AF215710299F97F846CA7C4 /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
 		1DC7600C4C8E25E278748FCC /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
+		255CEF362F6E5595B4FAA85C /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
 		2733A4577B239251B52458FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		27C2DE5CBC676B2300613B4B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		337B1B6744788EBB71DB977C /* HabitDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailScreen.swift; sourceTree = "<group>"; };
 		35F756702431E10347960662 /* Toggles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Toggles.swift; sourceTree = "<group>"; };
+		3C45FB60814ED39B467A2CD1 /* OnboardingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScreen.swift; sourceTree = "<group>"; };
 		442350E3AD412D3B8D451230 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		4568233B529B74A050023507 /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Regular.ttf"; sourceTree = "<group>"; };
 		510BEEA8F122E30E55C40BA5 /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
 		51884F92A14CDD437FF03E59 /* NotificationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsScreen.swift; sourceTree = "<group>"; };
 		6328D2EB1D8564176F733BAA /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
@@ -54,34 +67,57 @@
 		7313F727B51C609341C4D328 /* HabitsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsScreen.swift; sourceTree = "<group>"; };
 		7432C94F8D8F4678FE645C1D /* AppPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPrefs.swift; sourceTree = "<group>"; };
 		757134E23848D6632FD1EA11 /* Habit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Habit.swift; sourceTree = "<group>"; };
+		778A27E32B5EC79090457798 /* JetBrainsMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-Regular.ttf"; sourceTree = "<group>"; };
 		7B0D7D23AFC446A072A0F1D1 /* StatisticsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsScreen.swift; sourceTree = "<group>"; };
 		7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		90E9FDFECADEAF8DBEB3A9B6 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
 		934C18A7F2EB31512CEB4A4E /* HabitTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HabitTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		967F21BCBE01495F4ED07A7E /* AddHabitScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddHabitScreen.swift; sourceTree = "<group>"; };
 		A1144D024E0E2E3CD191193D /* HabitCatalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitCatalogue.swift; sourceTree = "<group>"; };
+		A5740D3F62B38C923D77F498 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		ABEFBC012D84C06BC78AAB1B /* PhoneFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneFrame.swift; sourceTree = "<group>"; };
 		AEEC9B51918F5D2CCC4735BD /* HabitLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLog.swift; sourceTree = "<group>"; };
 		C93D07E9F8C911755CF2553C /* RowGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowGroup.swift; sourceTree = "<group>"; };
+		D46FD911D775C3528AC32AF7 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Italic.ttf"; sourceTree = "<group>"; };
 		DA1712AD07B51CD754B87CDF /* HabitSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitSetupScreen.swift; sourceTree = "<group>"; };
 		E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Habit+Tracking.swift"; sourceTree = "<group>"; };
 		EB34DD28AC5140D8C52E80A7 /* Chips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chips.swift; sourceTree = "<group>"; };
 		FA89B49696CB52D519867261 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		FF9D38D77EB078C801B84738 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		"TEMP_81473894-C29E-4576-AE17-0290163506E8" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		"TEMP_D436794E-BAE7-4735-849B-AC2D198714E3" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0D84CA9112657F73BF2E2A53 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				D46FD911D775C3528AC32AF7 /* InstrumentSerif-Italic.ttf */,
+				4568233B529B74A050023507 /* InstrumentSerif-Regular.ttf */,
+				778A27E32B5EC79090457798 /* JetBrainsMono-Regular.ttf */,
+				1510CF27017DC9549A8A563B /* Karla-Regular.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		2CEDC5272953824332C89E86 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				7432C94F8D8F4678FE645C1D /* AppPrefs.swift */,
+				115941B367C4A53271505FD2 /* ClockTime.swift */,
 				65BEF1AD62BB1488E356A032 /* Enums.swift */,
 				757134E23848D6632FD1EA11 /* Habit.swift */,
 				E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */,
 				AEEC9B51918F5D2CCC4735BD /* HabitLog.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		352DB91DF7592F1B4DD73E96 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				0D84CA9112657F73BF2E2A53 /* Fonts */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		4DD9340E6CD742F33F7323A7 /* Screens */ = {
@@ -92,6 +128,7 @@
 				DA1712AD07B51CD754B87CDF /* HabitSetupScreen.swift */,
 				7313F727B51C609341C4D328 /* HabitsScreen.swift */,
 				51884F92A14CDD437FF03E59 /* NotificationsScreen.swift */,
+				3C45FB60814ED39B467A2CD1 /* OnboardingScreen.swift */,
 				27C2DE5CBC676B2300613B4B /* RootView.swift */,
 				7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */,
 				7B0D7D23AFC446A072A0F1D1 /* StatisticsScreen.swift */,
@@ -106,6 +143,7 @@
 				BEDE52E5F3AB6A394DA22A26 /* Components */,
 				F82C8844E0CEC9523B433828 /* Design */,
 				2CEDC5272953824332C89E86 /* Models */,
+				352DB91DF7592F1B4DD73E96 /* Resources */,
 				4DD9340E6CD742F33F7323A7 /* Screens */,
 				C31E65DCE16EF06192345FA0 /* Services */,
 				FF9D38D77EB078C801B84738 /* Assets.xcassets */,
@@ -132,6 +170,7 @@
 				723CF53D841CC0F07D109079 /* ProgressBar.swift */,
 				C93D07E9F8C911755CF2553C /* RowGroup.swift */,
 				1DC7600C4C8E25E278748FCC /* TabBar.swift */,
+				255CEF362F6E5595B4FAA85C /* TimePicker.swift */,
 				35F756702431E10347960662 /* Toggles.swift */,
 			);
 			path = Components;
@@ -141,6 +180,7 @@
 			isa = PBXGroup;
 			children = (
 				A1144D024E0E2E3CD191193D /* HabitCatalogue.swift */,
+				A5740D3F62B38C923D77F498 /* NotificationScheduler.swift */,
 				FA89B49696CB52D519867261 /* SeedData.swift */,
 			);
 			path = Services;
@@ -164,10 +204,10 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_69641A01-F337-4524-B463-F8E27B240AB7" /* habit-tracker */ = {
+		"TEMP_C9DCC6D2-5E76-4F34-BCCF-1F9D265AF8A3" /* habit-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_81473894-C29E-4576-AE17-0290163506E8" /* Signing.xcconfig */,
+				"TEMP_D436794E-BAE7-4735-849B-AC2D198714E3" /* Signing.xcconfig */,
 			);
 			path = "habit-tracker";
 			sourceTree = "<group>";
@@ -233,6 +273,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				63E4BD62F7B622DBD22D93AA /* Assets.xcassets in Resources */,
+				914D19804D4A749F29AFEE06 /* InstrumentSerif-Italic.ttf in Resources */,
+				21B7D5C4E7FF9C1702498BF5 /* InstrumentSerif-Regular.ttf in Resources */,
+				1E20F0EA8086698E3BD9F385 /* JetBrainsMono-Regular.ttf in Resources */,
+				D935F228E03B693D4B716AC0 /* Karla-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,6 +291,7 @@
 				FD02A6F95D30D16059CE66B6 /* AppPrefs.swift in Sources */,
 				258E90A541CB0298235DD005 /* Buttons.swift in Sources */,
 				56CF8A2660908994D9B6BDD3 /* Chips.swift in Sources */,
+				17442D72941917B27BF0BA23 /* ClockTime.swift in Sources */,
 				2A6D1C5AD98416C6C5769829 /* Colors.swift in Sources */,
 				07BE1CDB495E028DA4ED5E28 /* Enums.swift in Sources */,
 				776A2481C35F3368FFFF1141 /* Habit+Tracking.swift in Sources */,
@@ -258,7 +303,9 @@
 				8FD490931E9356CD4D7E247D /* HabitTrackerApp.swift in Sources */,
 				6608ED1AD09D7CAD2B0B3CC9 /* HabitsScreen.swift in Sources */,
 				F488FB0EB3E4079BD660A8DE /* Layout.swift in Sources */,
+				BBB0E859C81AFB7FC8E3BD93 /* NotificationScheduler.swift in Sources */,
 				17A1983B76F10790B740291F /* NotificationsScreen.swift in Sources */,
+				D5810D717ADEDC21D3D076DB /* OnboardingScreen.swift in Sources */,
 				37F3858083B278F692C7A725 /* PhoneFrame.swift in Sources */,
 				C3BA20FEB57DFBF33385AA7E /* ProgressBar.swift in Sources */,
 				F467C2C46331D0E92809FC1C /* RootView.swift in Sources */,
@@ -267,6 +314,7 @@
 				7C923DBB1E3CEC6AA858BA8A /* SettingsScreen.swift in Sources */,
 				ACE583262AA0C3844E405E84 /* StatisticsScreen.swift in Sources */,
 				3944922A771D6500D72D665C /* TabBar.swift in Sources */,
+				B5C2D03D1F483269E7FBAF99 /* TimePicker.swift in Sources */,
 				199081B46046C24F20969D4E /* TodayScreen.swift in Sources */,
 				6E443227412B91324034B9E2 /* Toggles.swift in Sources */,
 				9CC9E37B2710AA319660FCD6 /* Typography.swift in Sources */,
@@ -278,7 +326,7 @@
 /* Begin XCBuildConfiguration section */
 		3789F377332BFE621A8243FC /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_81473894-C29E-4576-AE17-0290163506E8" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_D436794E-BAE7-4735-849B-AC2D198714E3" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -368,7 +416,7 @@
 		};
 		8906BDEADDB4EC1C0043F70C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_81473894-C29E-4576-AE17-0290163506E8" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_D436794E-BAE7-4735-849B-AC2D198714E3" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
