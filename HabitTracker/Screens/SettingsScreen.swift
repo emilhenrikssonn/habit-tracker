@@ -7,6 +7,7 @@ struct SettingsScreen: View {
     @Query(filter: #Predicate<HabitLog> { $0.completed }) private var keptLogs: [HabitLog]
     @Environment(\.modelContext) private var ctx
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     var onOpenNotifications: () -> Void
 
     @State private var notificationStatus: UNAuthorizationStatus = .notDetermined
@@ -68,6 +69,14 @@ struct SettingsScreen: View {
                     Text("Tap Default view or Week starts to switch.")
                         .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
                         .padding(.top, 10)
+
+                    SectionLabel(text: "About").padding(.top, 24)
+                    HRule().padding(.top, 8)
+                    DisclosureRow(title: "Privacy policy",
+                                  subtitle: "Everything stays on this iPhone") {
+                        openURL(URL(string: "https://emilhenrikssonn.github.io/habit-tracker/privacy-policy.html")!)
+                    }
+                    HRule()
 
                     Spacer(minLength: 24)
                 }

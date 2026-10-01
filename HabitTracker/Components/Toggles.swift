@@ -35,6 +35,7 @@ struct CheckCircle: View {
             Circle()
                 .stroke(AppColor.outline, lineWidth: 1.5)
                 .frame(width: 22, height: 22)
+                .contentShape(Circle())
         }
     }
 }

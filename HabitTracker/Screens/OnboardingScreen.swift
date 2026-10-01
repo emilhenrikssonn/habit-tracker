@@ -354,7 +354,7 @@ struct OnboardingScreen: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(habitCount == 0
                  ? "Add your first habit with the + button whenever you're ready."
-                 : "\(count(habitCount)) waiting for you on Today.")
+                 : "You'll find your \(count(habitCount)) in the Today tab.")
                 .font(AppFont.serifItalic(24))
                 .foregroundStyle(AppColor.accent)
                 .fixedSize(horizontal: false, vertical: true)

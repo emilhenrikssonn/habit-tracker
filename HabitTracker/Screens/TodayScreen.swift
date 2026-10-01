@@ -306,7 +306,7 @@ private struct TodayGridTile: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 Spacer()
-                Button(action: onToggle) { CheckCircle(done: done).padding(4) }
+                Button(action: onToggle) { CheckCircle(done: done).padding(4).contentShape(Rectangle()) }
                     .buttonStyle(.plain)
             }
             Spacer(minLength: 16)

@@ -3,9 +3,12 @@ import SwiftData
 
 struct AddHabitScreen: View {
     @Environment(\.modelContext) private var ctx
+    @Query private var prefsList: [AppPrefs]
+    @Query private var habits: [Habit]
     var onClose: () -> Void
 
-    @State private var filter: HabitCategory? = nil
+    /// Raw category value; custom categories have no suggestions, only "Add custom habit".
+    @State private var filter: String? = nil
     @State private var setupEntry: CatalogueEntry? = nil
     @State private var customSetup: Bool = false
 
@@ -32,13 +35,20 @@ struct AddHabitScreen: View {
             HabitSetupScreen(prefilled: entry, onClose: { setupEntry = nil; onClose() })
         }
         .sheet(isPresented: $customSetup) {
-            HabitSetupScreen(prefilled: nil, onClose: { customSetup = false; onClose() })
+            HabitSetupScreen(prefilled: nil, category: filter, onClose: { customSetup = false; onClose() })
         }
     }
 
     private var filtered: [CatalogueEntry] {
         guard let filter else { return HabitCatalogue.entries }
-        return HabitCatalogue.entries.filter { $0.category == filter }
+        return HabitCatalogue.entries.filter { $0.category.rawValue == filter }
+    }
+
+    private var customCategories: [String] {
+        let builtIn = HabitCategory.allCases.map(\.rawValue)
+        return Set((prefsList.first?.customCategories ?? []) + habits.map(\.categoryRaw))
+            .subtracting(builtIn)
+            .sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 
     private var header: some View {
@@ -76,7 +86,10 @@ struct AddHabitScreen: View {
             HStack(spacing: 8) {
                 CategoryChip(title: "All", isActive: filter == nil) { filter = nil }
                 ForEach(HabitCategory.allCases) { cat in
-                    CategoryChip(title: cat.display, isActive: filter == cat) { filter = cat }
+                    CategoryChip(title: cat.display, isActive: filter == cat.rawValue) { filter = cat.rawValue }
+                }
+                ForEach(customCategories, id: \.self) { cat in
+                    CategoryChip(title: cat, isActive: filter == cat) { filter = cat }
                 }
             }
             .padding(.horizontal, AppMetrics.hPadding)

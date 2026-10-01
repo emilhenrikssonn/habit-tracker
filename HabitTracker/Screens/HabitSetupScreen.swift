@@ -27,12 +27,12 @@ struct HabitSetupScreen: View {
     @State private var pickingStart = false
     @State private var pickingRestDates = false
 
-    init(prefilled: CatalogueEntry?, onClose: @escaping () -> Void) {
+    init(prefilled: CatalogueEntry?, category: String? = nil, onClose: @escaping () -> Void) {
         self.prefilled = prefilled
         self.onClose = onClose
         let tracking = prefilled?.tracking ?? .done
         _name = State(initialValue: prefilled?.name ?? "New habit")
-        _categoryRaw = State(initialValue: (prefilled?.category ?? .health).rawValue)
+        _categoryRaw = State(initialValue: category ?? (prefilled?.category ?? .health).rawValue)
         _type = State(initialValue: prefilled?.type ?? .build)
         _tracking = State(initialValue: tracking)
         _amountUnit = State(initialValue: tracking == .amount ? prefilled?.unit ?? "" : "")

@@ -134,9 +134,9 @@ struct StatisticsScreen: View {
             HStack(spacing: 10) {
                 statCard("KEPT", "\(s.kept)/\(s.due)")
                 statCard("BEST RUN", s.bestRun == 1 ? "1 day" : "\(s.bestRun) d")
-                statCard("PERFECT", "\(s.perfectDays)")
+                statCard("PERFECT DAYS", "\(s.perfectDays)")
             }
-            Text("Best run is the most perfect days in a row, where every habit due was kept.")
+            Text("A perfect day is one where every habit due was kept. Best run is the most perfect days in a row. Habits still open today aren't counted until you tick them off.")
                 .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -316,10 +316,14 @@ private struct Summary {
         due = byDate.values.reduce(0) { $0 + $1.due }
         kept = byDate.values.reduce(0) { $0 + $1.kept }
 
+        // Today's open habits are left out of the totals, but the day isn't perfect until they're all kept.
+        let today = Calendar.current.startOfDay(for: Date())
+        let dueToday = habits.filter { $0.isDue(on: today) }.count
+
         var run = 0
         for date in byDate.keys.sorted() {
             let day = byDate[date]!
-            if day.kept == day.due {
+            if day.kept == (date == today ? max(day.due, dueToday) : day.due) {
                 perfectDays += 1
                 run += 1
                 bestRun = max(bestRun, run)
