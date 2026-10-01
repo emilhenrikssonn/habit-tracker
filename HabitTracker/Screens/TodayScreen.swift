@@ -314,11 +314,15 @@ private struct TodayGridTile: View {
                 Text(valueString)
                     .font(AppFont.mono(22))
                     .foregroundStyle(done ? AppColor.accentSoft : AppColor.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .layoutPriority(1)
                 if !habit.unitLabel.isEmpty {
                     Text(habit.unitLabel)
                         .font(AppFont.mono(11))
                         .foregroundStyle(AppColor.inkMute)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 Spacer(minLength: 4)
                 if habit.isQuantified {
@@ -326,6 +330,7 @@ private struct TodayGridTile: View {
                         Text("+1")
                             .font(AppFont.mono(12))
                             .foregroundStyle(AppColor.accent)
+                            .fixedSize()
                             .padding(.horizontal, 10).padding(.vertical, 5)
                             .background(Capsule().stroke(AppColor.accentMid, lineWidth: 1))
                     }

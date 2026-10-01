@@ -6,7 +6,7 @@ private enum StatsRange: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-/// Completion across all active habits for a date range. Archived habits are left out.
+/// Completion for a date range, across all active habits or a chosen set of them. Archived habits are left out.
 struct StatisticsScreen: View {
     @Query(sort: [SortDescriptor(\Habit.sortIndex)]) private var habits: [Habit]
     @AppStorage("weekStart") private var weekStart = 1
@@ -14,8 +14,15 @@ struct StatisticsScreen: View {
     @State private var customStart = Calendar.current.date(byAdding: .day, value: -29, to: Calendar.current.startOfDay(for: Date()))!
     @State private var customEnd = Calendar.current.startOfDay(for: Date())
     @State private var pickingDates = false
+    /// Habits picked in the filter sheet. Empty means all of them.
+    @State private var selection: Set<PersistentIdentifier> = []
+    @State private var pickingHabits = false
 
     private var active: [Habit] { habits.filter { !$0.archived } }
+    private var shown: [Habit] {
+        let picked = active.filter { selection.contains($0.persistentModelID) }
+        return picked.isEmpty ? active : picked
+    }
     private let cal = Calendar.current
 
     var body: some View {
@@ -23,11 +30,12 @@ struct StatisticsScreen: View {
             titleBlock
             rangeTabs
             dateLine
+            if !active.isEmpty { scopeLine }
             ScrollView {
                 if active.isEmpty {
                     emptyState
                 } else {
-                    let summary = Summary(habits: active, start: interval.start, end: interval.end)
+                    let summary = Summary(habits: shown, start: interval.start, end: interval.end)
                     VStack(alignment: .leading, spacing: 24) {
                         completionBlock(summary)
                         weekdayBlock(summary)
@@ -45,6 +53,47 @@ struct StatisticsScreen: View {
                 range = .custom
             } onClose: { pickingDates = false }
         }
+        .sheet(isPresented: $pickingHabits) {
+            HabitFilterSheet(groups: Self.grouped(active), selection: $selection) { pickingHabits = false }
+        }
+    }
+
+    // MARK: Scope
+
+    /// Habits by category, built-in categories first.
+    fileprivate static func grouped(_ habits: [Habit]) -> [(category: String, habits: [Habit])] {
+        let builtIn = HabitCategory.allCases.map(\.rawValue)
+        let custom = Set(habits.map(\.categoryRaw)).subtracting(builtIn).sorted()
+        return (builtIn + custom).compactMap { raw in
+            let list = habits.filter { $0.categoryRaw == raw }
+            return list.isEmpty ? nil : (raw, list)
+        }
+    }
+
+    /// "All habits", the category names when whole categories are picked, else the habit name or a count.
+    private var scopeTitle: String {
+        guard shown.count < active.count else { return "All habits" }
+        let ids = Set(shown.map(\.persistentModelID))
+        let touched = Self.grouped(active).filter { group in group.habits.contains { ids.contains($0.persistentModelID) } }
+        let whole = touched.allSatisfy { group in group.habits.allSatisfy { ids.contains($0.persistentModelID) } }
+        if whole && touched.count <= 2 {
+            return touched.map { Habit.categoryName(for: $0.category) }.joined(separator: " + ")
+        }
+        return shown.count == 1 ? shown[0].name : "\(shown.count) habits"
+    }
+
+    private var scopeLine: some View {
+        Button { pickingHabits = true } label: {
+            HStack {
+                Text(scopeTitle).font(AppFont.serif(21)).foregroundStyle(AppColor.ink).lineLimit(1)
+                Spacer()
+                Text("choose habits ›").font(AppFont.mono(11)).foregroundStyle(AppColor.accent)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, AppMetrics.hPadding)
+        .padding(.bottom, 18)
     }
 
     // MARK: Range
@@ -105,7 +154,7 @@ struct StatisticsScreen: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, AppMetrics.hPadding)
-        .padding(.bottom, 18)
+        .padding(.bottom, 12)
     }
 
     private var emptyState: some View {
@@ -217,7 +266,7 @@ struct StatisticsScreen: View {
         let prevStart = cal.date(byAdding: .day, value: -(length - 1), to: prevEnd)!
         return VStack(alignment: .leading, spacing: 14) {
             SectionLabel(text: "Per habit")
-            ForEach(active) { habit in
+            ForEach(shown) { habit in
                 let days = habit.dueDays(from: start, to: end)
                 let previous = habit.dueDays(from: prevStart, to: prevEnd)
                 perHabitRow(habit, days: days, previous: previous, start: start, end: end)
@@ -340,6 +389,68 @@ private struct Summary {
     static func rate(_ days: [(date: Date, kept: Bool)]) -> Int? {
         guard !days.isEmpty else { return nil }
         return Int((Double(days.filter(\.kept).count) / Double(days.count) * 100).rounded())
+    }
+}
+
+/// Pick whole categories, single habits, or any mix of them.
+private struct HabitFilterSheet: View {
+    let groups: [(category: String, habits: [Habit])]
+    @Binding var selection: Set<PersistentIdentifier>
+    var onClose: () -> Void
+
+    var body: some View {
+        ScreenScaffold {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Show stats for").font(AppFont.serif(32)).foregroundStyle(AppColor.ink)
+                    Spacer()
+                    Button(action: onClose) {
+                        Text("Done").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
+                    }.buttonStyle(.plain)
+                }
+                .padding(.top, 22).padding(.bottom, 14)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HRule()
+                        row("All habits", font: AppFont.serif(21), on: selection.isEmpty) { selection = [] }
+                        HRule()
+                        ForEach(groups, id: \.category) { group in
+                            let ids = Set(group.habits.map(\.persistentModelID))
+                            row(Habit.categoryName(for: group.category).uppercased(),
+                                font: AppFont.mono(11, weight: .medium), on: ids.isSubset(of: selection)) {
+                                if ids.isSubset(of: selection) { selection.subtract(ids) } else { selection.formUnion(ids) }
+                            }
+                            .padding(.top, 14)
+                            HRule()
+                            ForEach(group.habits) { habit in
+                                let id = habit.persistentModelID
+                                row(habit.name, font: AppFont.serif(21), on: selection.contains(id)) {
+                                    if selection.contains(id) { selection.remove(id) } else { selection.insert(id) }
+                                }
+                                HRule()
+                            }
+                        }
+                        Text("Tap a category to pick everything in it, or pick habits one by one.")
+                            .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                            .padding(.top, 12).padding(.bottom, 24)
+                    }
+                }
+            }
+            .padding(.horizontal, AppMetrics.hPadding)
+        }
+    }
+
+    private func row(_ title: String, font: Font, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title).font(font).foregroundStyle(on ? AppColor.ink : AppColor.inkDim)
+                Spacer()
+                if on { Image(systemName: "checkmark").foregroundStyle(AppColor.accent) }
+            }
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
