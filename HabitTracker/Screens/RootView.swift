@@ -5,6 +5,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.scenePhase) private var scenePhase
     @Query private var prefsList: [AppPrefs]
+    private var store: Store { Store.shared }
 
     @State private var tab: RootTab = {
         if let tabArg = ProcessInfo.processInfo.environment["START_TAB"],
@@ -23,13 +24,22 @@ struct RootView: View {
                 OnboardingScreen(prefs: prefs)
                     .transition(.opacity)
             } else {
-                main.transition(.opacity)
+                // Everything needs a subscription. Habits and logs stay on the device either way.
+                switch store.access {
+                case .unknown: ScreenScaffold { EmptyView() }
+                case .notSubscribed: PaywallScreen().transition(.opacity)
+                case .subscribed: main.transition(.opacity)
+                }
             }
         }
+        .task { await store.start() }
         .onChange(of: scenePhase) { _, phase in
             // Rebuild notifications from the latest logs whenever the app opens or leaves the screen.
             guard phase != .inactive else { return }
-            Task { await NotificationScheduler.reschedule(in: ctx) }
+            Task {
+                if phase == .active { await store.refreshAccess() }
+                await NotificationScheduler.reschedule(in: ctx)
+            }
         }
     }
 

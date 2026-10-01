@@ -1,14 +1,14 @@
 import SwiftUI
 import SwiftData
 
-/// First-launch flow: name, a short tour, interests, first habits and notification choices.
+/// First-launch flow: name, theme, a short tour, interests, first habits and notification choices.
 struct OnboardingScreen: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: [SortDescriptor(\Habit.sortIndex)]) private var habits: [Habit]
     @Bindable var prefs: AppPrefs
 
     private enum Step: Int, CaseIterable {
-        case welcome, name, tour, interests, habits, notifications, done
+        case welcome, name, theme, tour, interests, habits, notifications, done
     }
 
     @State private var step: Step = {
@@ -19,6 +19,7 @@ struct OnboardingScreen: View {
         return .welcome
     }()
     @State private var name = ""
+    @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .dark
     @State private var interests: Set<HabitCategory> = []
     @State private var picked: Set<String> = []
     @State private var customSetup = false
@@ -72,7 +73,9 @@ struct OnboardingScreen: View {
         case .welcome:
             BottomBar { PrimaryButton(title: "Get started") { go(to: .name) } }
         case .name:
-            BottomBar { PrimaryButton(title: "Continue") { nameFocused = false; go(to: .tour) } }
+            BottomBar { PrimaryButton(title: "Continue") { nameFocused = false; go(to: .theme) } }
+        case .theme:
+            BottomBar { PrimaryButton(title: "Continue") { go(to: .tour) } }
         case .tour:
             BottomBar { PrimaryButton(title: "Got it") { go(to: .interests) } }
         case .interests:
@@ -122,6 +125,7 @@ struct OnboardingScreen: View {
         switch step {
         case .welcome: welcome
         case .name: namePage
+        case .theme: themePage
         case .tour: tour
         case .interests: interestsPage
         case .habits: habitsPage
@@ -174,10 +178,45 @@ struct OnboardingScreen: View {
                 .textContentType(.givenName)
                 .submitLabel(.continue)
                 .focused($nameFocused)
-                .onSubmit { go(to: .tour) }
+                .onSubmit { go(to: .theme) }
             HRule().padding(.top, 8)
         }
         .onAppear { nameFocused = true }
+    }
+
+    private var themePage: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            title("Dark or light?", "Tap one to try it. You can switch later in Settings.")
+            HStack(spacing: 12) {
+                ForEach(AppTheme.allCases) { option in
+                    themeTile(option)
+                }
+            }
+        }
+    }
+
+    private func themeTile(_ option: AppTheme) -> some View {
+        let on = theme == option
+        return Button { theme = option } label: {
+            VStack(alignment: .leading, spacing: 14) {
+                ThemePreview()
+                    .environment(\.colorScheme, option.colorScheme)
+                HStack {
+                    Text(option.display).font(AppFont.serif(24))
+                        .foregroundStyle(on ? AppColor.ink : AppColor.inkDim)
+                    Spacer()
+                    CheckCircle(done: on)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
+                .fill(on ? AppColor.surfaceAccent : AppColor.surface))
+            .overlay(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
+                .stroke(on ? AppColor.accentMid : AppColor.border, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var tour: some View {
@@ -192,7 +231,7 @@ struct OnboardingScreen: View {
             tourRow(icon: "chart.bar", title: "Stats",
                     text: "Completion, streaks and trends over the last week, month or year.")
             tourRow(icon: "gearshape", title: "Settings",
-                    text: "Your name and notifications. Anything you choose now can be changed there later.")
+                    text: "Your name, theme and notifications. Anything you choose now can be changed there later.")
         }
     }
 
@@ -395,6 +434,28 @@ struct OnboardingScreen: View {
         withAnimation(.easeOut(duration: 0.25)) { prefs.hasOnboarded = true }
         try? ctx.save()
         Task { await NotificationScheduler.reschedule(in: ctx) }
+    }
+}
+
+/// A small mock of the Today screen, drawn in whichever colour scheme it is given.
+private struct ThemePreview: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Today").font(AppFont.serif(20)).foregroundStyle(AppColor.ink)
+            RoundedRectangle(cornerRadius: 2).fill(AppColor.accent).frame(width: 54, height: 4)
+            ForEach(0..<3, id: \.self) { i in
+                HStack(spacing: 8) {
+                    CheckCircle(done: i == 0).scaleEffect(0.7)
+                    RoundedRectangle(cornerRadius: 2).fill(i == 0 ? AppColor.inkMute : AppColor.ink)
+                        .frame(width: i == 1 ? 46 : 62, height: 5)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10).fill(AppColor.bg))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppColor.borderStrong, lineWidth: 1))
     }
 }
 

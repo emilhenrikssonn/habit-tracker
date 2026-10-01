@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 import SwiftData
 import UserNotifications
@@ -14,7 +15,9 @@ struct SettingsScreen: View {
     @State private var editingName = false
     @State private var nameDraft = ""
     @State private var exportFile: ExportFile? = nil
+    @State private var managingSubscription = false
     @AppStorage("weekStart") private var weekStart = 1
+    @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .dark
 
     private var prefs: AppPrefs {
         if let p = prefsList.first { return p }
@@ -50,6 +53,11 @@ struct SettingsScreen: View {
 
                     SectionLabel(text: "App").padding(.top, 24)
                     HRule().padding(.top, 8)
+                    DisclosureRow(title: "Theme", trailing: theme.display,
+                                  subtitle: "Dark or light", showChevron: false) {
+                        theme = theme == .dark ? .light : .dark
+                    }
+                    HRule()
                     DisclosureRow(title: "Default view", trailing: prefs.defaultView == .list ? "List" : "Grid",
                                   subtitle: "How Today opens", showChevron: false) {
                         prefs.defaultView = prefs.defaultView == .list ? .grid : .list
@@ -66,12 +74,21 @@ struct SettingsScreen: View {
                         exportFile = DataExport.csvFile(in: ctx).map(ExportFile.init)
                     }
                     HRule()
-                    Text("Tap Default view or Week starts to switch.")
+                    Text("Tap Theme, Default view or Week starts to switch.")
                         .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
                         .padding(.top, 10)
 
                     SectionLabel(text: "About").padding(.top, 24)
                     HRule().padding(.top, 8)
+                    DisclosureRow(title: "Subscription", trailing: "active",
+                                  subtitle: "Change plan or cancel") {
+                        managingSubscription = true
+                    }
+                    HRule()
+                    DisclosureRow(title: "Terms of use") {
+                        openURL(PaywallScreen.termsURL)
+                    }
+                    HRule()
                     DisclosureRow(title: "Privacy policy",
                                   subtitle: "Everything stays on this iPhone") {
                         openURL(URL(string: "https://emilhenrikssonn.github.io/habit-tracker/privacy-policy.html")!)
@@ -87,6 +104,7 @@ struct SettingsScreen: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { notificationStatus = await NotificationScheduler.status() } }
         }
+        .manageSubscriptionsSheet(isPresented: $managingSubscription)
         .sheet(item: $exportFile) { file in
             ShareSheet(items: [file.url])
         }

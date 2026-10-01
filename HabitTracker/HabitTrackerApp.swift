@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct HabitTrackerApp: App {
     let container: ModelContainer
+    @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .dark
 
     init() {
         let schema = Schema([Habit.self, HabitLog.self, AppPrefs.self])
@@ -24,7 +25,7 @@ struct HabitTrackerApp: App {
         WindowGroup {
             RootView()
                 .modelContainer(container)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(theme.colorScheme)
                 .tint(AppColor.accent)
         }
     }
