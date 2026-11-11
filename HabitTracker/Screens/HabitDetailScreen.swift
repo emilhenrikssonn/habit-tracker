@@ -5,9 +5,13 @@ struct HabitDetailScreen: View {
     @Environment(\.modelContext) private var ctx
     let habit: Habit
     var onClose: () -> Void
+    /// Asks the presenter to delete the habit once this screen has closed.
+    var onDelete: () -> Void
 
     @State private var editing = false
     @State private var confirmingArchive = false
+    @State private var confirmingDelete = false
+    @State private var entering: Habit? = nil
     @State private var calendarMonth = Date()
     @State private var selectedBar: Int? = nil
     @AppStorage("habitChartDays") private var chartDays = 14
@@ -21,7 +25,9 @@ struct HabitDetailScreen: View {
                         titleBlock
                         logCard
                         statsRow
+                        insightsBlock
                         chartBlock
+                        yearBlock
                         calendarBlock
                         archiveBlock
                         Spacer(minLength: 24)
@@ -39,6 +45,13 @@ struct HabitDetailScreen: View {
         } message: {
             Text("It leaves Today, Stats and reminders. Its history is kept, and you can reactivate it from Habits → Archived.")
         }
+        .confirmationDialog("Delete \(habit.name)?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button("Delete for good", role: .destructive) { onDelete() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Its whole history is removed from this iPhone. This can't be undone. Archive it instead to keep the history.")
+        }
+        .amountEntry(for: $entering)
     }
 
     private var headerRow: some View {
@@ -84,16 +97,25 @@ struct HabitDetailScreen: View {
                      : (done ? "Kept today" : "Not done yet"))
                     .font(AppFont.serif(22)).foregroundStyle(AppColor.ink)
                 Spacer()
-                MetaChip(text: "LOG")
+                if habit.isQuantified {
+                    Button { entering = habit } label: {
+                        Text("enter ›").font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    MetaChip(text: "LOG")
+                }
             }
             if habit.isQuantified {
                 ThinBar(progress: value / max(habit.dailyGoal, 1), height: 6, track: AppColor.border, fill: AppColor.accent)
-                HStack(spacing: 10) {
-                    actionPill("−1") { habit.add(-1, in: ctx) }
-                        .disabled(value <= 0)
-                        .opacity(value <= 0 ? 0.4 : 1)
+                HStack(spacing: 8) {
+                    ForEach(minusSteps.reversed(), id: \.self) { step in
+                        actionPill("−\(habit.format(step))", fill: true) { habit.add(-step, in: ctx) }
+                            .disabled(value <= 0)
+                            .opacity(value <= 0 ? 0.4 : 1)
+                    }
                     ForEach(habit.logSteps, id: \.self) { step in
-                        actionPill("+\(habit.format(step))") { habit.add(step, in: ctx) }
+                        actionPill("+\(habit.format(step))", fill: true) { habit.add(step, in: ctx) }
                     }
                 }
                 if habit.tracking == .time { timerRow }
@@ -145,6 +167,11 @@ struct HabitDetailScreen: View {
         }
     }
 
+    /// Amounts get a minus for every plus step; time keeps one small minus to fix a slip.
+    private var minusSteps: [Double] {
+        habit.tracking == .amount ? habit.logSteps : [habit.quickStep]
+    }
+
     /// 04:12, or 1:04:12 past an hour.
     private static func clock(_ t: TimeInterval) -> String {
         let s = Int(t)
@@ -153,13 +180,17 @@ struct HabitDetailScreen: View {
             : String(format: "%02d:%02d", s / 60, s % 60)
     }
 
-    private func actionPill(_ label: String, action: @escaping () -> Void) -> some View {
+    /// `fill` shares the row's width between the pills, for rows of up to four steps.
+    private func actionPill(_ label: String, fill: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
                 .font(AppFont.mono(12)).foregroundStyle(AppColor.accent)
                 .lineLimit(1)
-                .padding(.horizontal, 14).padding(.vertical, 8)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, fill ? 6 : 14).padding(.vertical, 8)
+                .frame(maxWidth: fill ? .infinity : nil)
                 .background(Capsule().stroke(AppColor.accentMid, lineWidth: 1))
+                .contentShape(Capsule())
         }.buttonStyle(.plain)
     }
 
@@ -186,6 +217,46 @@ struct HabitDetailScreen: View {
     }
 
     private func days(_ n: Int) -> String { n == 1 ? "1 day" : "\(n) days" }
+
+    private var insightsBlock: some View {
+        let today = Calendar.current.startOfDay(for: Date())
+        let report = InsightReport(habits: [habit], start: Calendar.current.date(byAdding: .day, value: -89, to: today)!, end: today)
+        let recovery = report.recoveries.first ?? nil
+        let back: String
+        if let gap = recovery?.currentGap, gap > 0 { back = "off \(days(gap))" }
+        else if let typical = recovery?.typicalDays { back = typical <= 1 ? "next day" : "~\(days(typical))" }
+        else { back = "no slips" }
+        let risky = report.risk.flatMap { $0.standsOut ? Habit.dayShort($0.weekday) + "s" : nil } ?? "none yet"
+        return VStack(alignment: .leading, spacing: 12) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                stat("Momentum", report.momentum.map { "\($0) / 100" } ?? "–")
+                stat("Back on track", back)
+                stat("Usually done", report.usualTimes.first.flatMap { $0 }.map(Insights.clock) ?? "–")
+                stat("Riskiest day", risky)
+            }
+            if let r = report.risk, r.standsOut {
+                Text("\(r.rate)% of streaks going into a \(ClockTime.weekdayName(r.weekday)) end there, against \(r.overall)% on other days.")
+                    .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var yearBlock: some View {
+        let byDay = Dictionary(habit.dueDays(from: Calendar.current.date(byAdding: .day, value: -371, to: Date())!, to: Date())
+            .map { ($0.date, $0.kept) }, uniquingKeysWith: { a, _ in a })
+        let logs = habit.logsByDay
+        return VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: "Last 12 months")
+            ContributionGraph { date in
+                let day = Calendar.current.startOfDay(for: date)
+                guard let kept = byDay[day] else { return nil }
+                if kept || !habit.isQuantified { return kept ? 1 : 0 }
+                // Partly logged amounts and times show as a lighter shade.
+                return min((logs[day]?.value ?? 0) / max(habit.dailyGoal, 1), 0.99)
+            }
+        }
+    }
 
     private func stat(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -357,6 +428,14 @@ struct HabitDetailScreen: View {
             Text("For habits you're done with. They're hidden from Today and Stats but kept, so you can bring them back.")
                 .font(AppFont.sans(13)).foregroundStyle(AppColor.inkMute)
                 .fixedSize(horizontal: false, vertical: true)
+            Button { confirmingDelete = true } label: {
+                Text("Delete habit")
+                    .font(AppFont.mono(12)).foregroundStyle(AppColor.inkMute)
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
         }
     }
 

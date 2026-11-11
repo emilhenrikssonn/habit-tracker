@@ -109,7 +109,7 @@ struct AddHabitScreen: View {
                     .overlay(Text("+").font(AppFont.serif(20)).foregroundStyle(AppColor.accent))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Add custom habit").font(AppFont.serif(21)).foregroundStyle(AppColor.ink)
-                    Text("Start empty and configure yourself")
+                    Text("Name it yourself and choose how to track it")
                         .font(AppFont.mono(11)).foregroundStyle(AppColor.inkMute)
                 }
                 Spacer()

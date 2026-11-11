@@ -23,14 +23,21 @@ extension Habit {
         unitLabel.isEmpty ? format(value) : "\(format(value)) \(unitLabel)"
     }
 
-    /// Step sizes offered when logging, in the habit's own unit.
+    /// Step sizes offered when logging, in the habit's own unit, scaled to the goal so it takes
+    /// about 20 small steps to reach: 8 glasses → 1, 20 pages → 1 and 5, 8000 steps → 100 and 1000.
     var logSteps: [Double] {
         switch tracking {
         case .done: return []
-        case .time: return [1, 5, 15]
-        case .amount: return dailyGoal >= 10 ? [1, 5] : [1]
+        case .time: return dailyGoal >= 120 ? [5, 15, 60] : [1, 5, 15]
+        case .amount:
+            guard dailyGoal >= 10 else { return [1] }
+            let small = max(1, pow(10, floor(log10(dailyGoal / 20))))
+            return [small, dailyGoal / (small * 10) >= 4 ? small * 10 : small * 5]
         }
     }
+
+    /// The step a single quick tap adds.
+    var quickStep: Double { logSteps.first ?? 1 }
 
     // MARK: Logging
 
@@ -46,13 +53,21 @@ extension Habit {
     func add(_ delta: Double, in ctx: ModelContext) {
         let l = log(in: ctx)
         l.value = max(0, l.value + delta)
-        l.completed = l.value >= dailyGoal
+        l.setCompleted(l.value >= dailyGoal)
+        try? ctx.save()
+    }
+
+    /// Replaces today's amount with a typed-in total, in the habit's unit.
+    func setValue(_ value: Double, in ctx: ModelContext) {
+        let l = log(in: ctx)
+        l.value = max(0, value)
+        l.setCompleted(l.value >= dailyGoal)
         try? ctx.save()
     }
 
     func toggleDone(in ctx: ModelContext) {
         let l = log(in: ctx)
-        l.completed.toggle()
+        l.setCompleted(!l.completed)
         if l.completed {
             if isQuantified && l.value < dailyGoal { l.value = dailyGoal }
             if !isQuantified { l.value = 1 }
@@ -133,12 +148,12 @@ extension Habit {
         return cal.date(byAdding: .day, value: -back, to: cal.startOfDay(for: date))!
     }
 
-    private var logsByDay: [Date: HabitLog] {
+    var logsByDay: [Date: HabitLog] {
         let cal = Calendar.current
         return Dictionary(logs.map { (cal.startOfDay(for: $0.date), $0) }, uniquingKeysWith: { a, _ in a })
     }
 
-    private var firstDay: Date {
+    var firstDay: Date {
         let cal = Calendar.current
         let earliestLog = logs.map(\.date).min() ?? createdAt
         return cal.startOfDay(for: min(earliestLog, createdAt))

@@ -93,6 +93,9 @@ final class Store {
     #if DEBUG
     @ObservationIgnored private var debugUnlocked = ProcessInfo.processInfo.environment["SKIP_PAYWALL"] == "1"
 
+    /// Hides the debug skip link, for taking screenshots of the paywall.
+    var hidesDebugSkip = false
+
     /// Debug builds only: get past the paywall without a purchase.
     func debugUnlock() {
         debugUnlocked = true

@@ -16,6 +16,8 @@ struct RootView: View {
     }()
     @State private var addHabitPresented: Bool = ProcessInfo.processInfo.environment["OPEN_ADD"] == "1"
     @State private var openHabit: Habit? = nil
+    /// Deleted once its page has finished closing, so the page never draws a deleted habit.
+    @State private var habitToDelete: Habit? = nil
     @State private var notificationsPresented: Bool = ProcessInfo.processInfo.environment["OPEN_NOTIFS"] == "1"
 
     var body: some View {
@@ -41,6 +43,15 @@ struct RootView: View {
                 await NotificationScheduler.reschedule(in: ctx)
             }
         }
+    }
+
+    private func deletePendingHabit() {
+        guard let habit = habitToDelete else { return }
+        habitToDelete = nil
+        ctx.delete(habit)
+        try? ctx.save()
+        let ctx = ctx
+        Task { await NotificationScheduler.reschedule(in: ctx) }
     }
 
     private var main: some View {
@@ -69,8 +80,11 @@ struct RootView: View {
         .sheet(isPresented: $addHabitPresented) {
             AddHabitScreen(onClose: { addHabitPresented = false })
         }
-        .sheet(item: $openHabit) { habit in
-            HabitDetailScreen(habit: habit, onClose: { openHabit = nil })
+        .sheet(item: $openHabit, onDismiss: deletePendingHabit) { habit in
+            HabitDetailScreen(habit: habit, onClose: { openHabit = nil }, onDelete: {
+                habitToDelete = habit
+                openHabit = nil
+            })
         }
         .sheet(isPresented: $notificationsPresented) {
             NotificationsScreen(onClose: { notificationsPresented = false })

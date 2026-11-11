@@ -36,9 +36,17 @@ struct StatisticsScreen: View {
                     emptyState
                 } else {
                     let summary = Summary(habits: shown, start: interval.start, end: interval.end)
+                    let report = InsightReport(habits: shown, start: interval.start, end: interval.end)
                     VStack(alignment: .leading, spacing: 24) {
                         completionBlock(summary)
+                        MomentumBlock(report: report)
                         weekdayBlock(summary)
+                        WeekendSplitBlock(report: report)
+                        TimeOfDayBlock(report: report)
+                        RoutinesBlock(report: report)
+                        SlipsBlock(report: report)
+                        YearGraphBlock(report: report)
+                        RecordsBlock(report: report)
                         perHabitBlock(summary)
                         Spacer(minLength: 24)
                     }

@@ -2,6 +2,25 @@
 
 Draft text for App Store Connect. Character limits are Apple's.
 
+## What's New in 1.1 (4000 max)
+
+Deeper statistics:
+• Momentum: a score that weighs your recent days most, so you can see when you're speeding up or slowing down
+• Time of day: when you actually do your habits, and each habit's usual time
+• Routines: habits you tend to do one after another
+• Weekdays vs weekends, side by side
+• Streak risk: the day of the week your streaks usually break
+• Comebacks: how quickly you get back on track after a miss
+• A year-at-a-glance grid, for all habits and for each one
+• Personal records: longest streak, perfect weeks, best month
+
+Easier logging:
+• Type in an amount directly, like today's steps
+• Step buttons now fit the size of your goal: +100 and +1000 for 8000 steps
+• Long-press a habit on Today to enter or adjust an amount
+
+You can now delete a habit straight from its page, not only after archiving it.
+
 ## Name (30 max)
 
 Habits: Small Things Daily
@@ -39,11 +58,16 @@ SCHEDULES THAT FIT REAL LIFE
 
 TODAY AT A GLANCE
 • Everything due today in a list or a grid
-• One tap to mark a habit done, +1 to log an amount
+• One tap to mark a habit done, or log an amount in steps that fit your goal
+• Type in an amount directly, like today's step count
 
 STATISTICS THAT MEAN SOMETHING
 • Completion rate, perfect days and best run
-• See which weekdays work best for you
+• See which weekdays work best for you, and weekdays against weekends
+• Momentum that shows whether you're speeding up or slowing down
+• When in the day you do your habits, and which ones you do back to back
+• The weekday your streaks usually break, and how fast you bounce back
+• A year-at-a-glance grid and a timeline of your personal records
 • Look at everything, a category, or any mix of habits
 • Week, month, six months, year or your own date range
 

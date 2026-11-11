@@ -9,6 +9,8 @@ final class HabitLog {
     var completed: Bool = false
     var skipped: Bool = false
     var note: String = ""
+    /// When the day was ticked off or its goal reached. Nil for logs from before this was recorded.
+    var completedAt: Date? = nil
 
     var habit: Habit?
 
@@ -18,5 +20,13 @@ final class HabitLog {
         self.completed = completed
         self.skipped = skipped
         self.note = note
+        if completed { completedAt = Date() }
+    }
+
+    /// Sets `completed`, stamping the time it became kept and clearing it when undone.
+    func setCompleted(_ kept: Bool, at time: Date = Date()) {
+        if kept && !completed { completedAt = time }
+        if !kept { completedAt = nil }
+        completed = kept
     }
 }

@@ -26,12 +26,16 @@ struct HabitSetupScreen: View {
     @State private var pickingReminder = false
     @State private var pickingStart = false
     @State private var pickingRestDates = false
+    @FocusState private var nameFocused: Bool
+    /// Set when Save is tapped without a name.
+    @State private var nameMissing = false
 
     init(prefilled: CatalogueEntry?, category: String? = nil, onClose: @escaping () -> Void) {
         self.prefilled = prefilled
         self.onClose = onClose
         let tracking = prefilled?.tracking ?? .done
-        _name = State(initialValue: prefilled?.name ?? "New habit")
+        // A custom habit starts unnamed, so naming it is the first thing to do.
+        _name = State(initialValue: prefilled?.name ?? "")
         _categoryRaw = State(initialValue: category ?? (prefilled?.category ?? .health).rawValue)
         _type = State(initialValue: prefilled?.type ?? .build)
         _tracking = State(initialValue: tracking)
@@ -86,6 +90,12 @@ struct HabitSetupScreen: View {
                               onCancel: onClose, onSave: save)
             }
         }
+        .task {
+            // Bring the keyboard up straight away for a habit that still needs a name.
+            guard name.isEmpty else { return }
+            try? await Task.sleep(for: .milliseconds(450))
+            nameFocused = true
+        }
         .sheet(isPresented: $pickingStart) {
             StartDateSheet(selected: startDate, onPick: { startDate = $0 }, onClose: { pickingStart = false })
         }
@@ -111,7 +121,7 @@ struct HabitSetupScreen: View {
                 Text("‹ back").font(AppFont.mono(12)).foregroundStyle(AppColor.inkDim)
             }.buttonStyle(.plain)
             Spacer()
-            SectionLabel(text: editing == nil ? "how to track it" : "edit habit")
+            SectionLabel(text: editing == nil ? "new habit" : "edit habit")
         }
         .padding(.horizontal, AppMetrics.hPadding)
         .padding(.top, 18)
@@ -120,10 +130,30 @@ struct HabitSetupScreen: View {
 
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("Habit name", text: $name)
-                .font(AppFont.serif(40))
-                .foregroundStyle(AppColor.ink)
-                .submitLabel(.done)
+            VStack(alignment: .leading, spacing: 6) {
+                SectionLabel(text: nameHint, color: nameMissing ? AppColor.accent : AppColor.inkMute)
+                HStack(alignment: .center, spacing: 10) {
+                    TextField("", text: $name, prompt: Text("Name your habit").foregroundStyle(AppColor.dimOff))
+                        .font(AppFont.serif(40))
+                        .foregroundStyle(AppColor.ink)
+                        .focused($nameFocused)
+                        .submitLabel(.done)
+                        .textInputAutocapitalization(.sentences)
+                        .onChange(of: name) { _, new in
+                            if !new.trimmingCharacters(in: .whitespaces).isEmpty { nameMissing = false }
+                        }
+                    if !nameFocused {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 18))
+                            .foregroundStyle(AppColor.accent)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { nameFocused = true }
+                Rectangle()
+                    .fill(nameFocused || nameMissing ? AppColor.accent : AppColor.borderStrong)
+                    .frame(height: 1)
+            }
             HStack(spacing: 10) {
                 CategoryChip(title: Habit.categoryName(for: categoryRaw), isActive: true) { pickingCategory = true }
                 Button { pickingCategory = true } label: {
@@ -370,10 +400,21 @@ struct HabitSetupScreen: View {
         }
     }
 
+    private var nameHint: String {
+        if nameMissing { return "Give your habit a name first" }
+        if editing != nil { return "Name" }
+        return prefilled == nil ? "Name · you choose" : "Name · tap to rename"
+    }
+
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else {
+            nameMissing = true
+            nameFocused = true
+            return
+        }
         let h = editing ?? Habit(name: "", category: .health, sortIndex: 100)
-        h.name = trimmedName.isEmpty ? "New habit" : trimmedName
+        h.name = trimmedName
         h.categoryRaw = categoryRaw
         h.type = type
         h.tracking = tracking
@@ -396,7 +437,7 @@ struct HabitSetupScreen: View {
         if editing == nil { ctx.insert(h) }
         // Today's completion follows the (possibly new) goal.
         if let log = h.todayLog(), h.isQuantified {
-            log.completed = log.value >= h.dailyGoal
+            log.setCompleted(log.value >= h.dailyGoal)
         }
         if reminder != nil, let prefs = try? ctx.fetch(FetchDescriptor<AppPrefs>()).first {
             // Setting a time on a habit means wanting its reminders.

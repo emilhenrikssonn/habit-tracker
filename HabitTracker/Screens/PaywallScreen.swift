@@ -198,7 +198,7 @@ struct PaywallScreen: View {
                     link("Terms") { openURL(Self.termsURL) }
                     link("Privacy") { openURL(Self.privacyURL) }
                     #if DEBUG
-                    link("Skip (debug)") { store.debugUnlock() }
+                    if !store.hidesDebugSkip { link("Skip (debug)") { store.debugUnlock() } }
                     #endif
                 }
             }

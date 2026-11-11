@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0456BF0E96AD22EF35E71EA2 /* LoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06DE17006B1F706A0938F57D /* LoggingTests.swift */; };
+		04F613353784A4AB00BB6500 /* AmountEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1558C75DA3D6E8AB4368AEAB /* AmountEntry.swift */; };
 		07BE1CDB495E028DA4ED5E28 /* Enums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BEF1AD62BB1488E356A032 /* Enums.swift */; };
 		17442D72941917B27BF0BA23 /* ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115941B367C4A53271505FD2 /* ClockTime.swift */; };
 		17A1983B76F10790B740291F /* NotificationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51884F92A14CDD437FF03E59 /* NotificationsScreen.swift */; };
@@ -30,8 +32,10 @@
 		6AF11FAC87837A215EB6D08D /* HabitDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 337B1B6744788EBB71DB977C /* HabitDetailScreen.swift */; };
 		6E443227412B91324034B9E2 /* Toggles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F756702431E10347960662 /* Toggles.swift */; };
 		776A2481C35F3368FFFF1141 /* Habit+Tracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */; };
+		7B667DFE1C245EC34626C61E /* StatisticsInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9418DF48EA76473F39FD868 /* StatisticsInsights.swift */; };
 		7C923DBB1E3CEC6AA858BA8A /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */; };
 		8100D4F50DF6E268949E18BB /* ArchivedHabitsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 676A953D8CBE2FAA706051D3 /* ArchivedHabitsScreen.swift */; };
+		830969FDEE457EE2904FCE6B /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = DACD5C2B2B96ABF9D0967EED /* Insights.swift */; };
 		85C4FE0700BC207A3785B236 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 73E4EAA100C77138603E6431 /* Products.storekit */; };
 		8FD490931E9356CD4D7E247D /* HabitTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004D5DF10775A860CE77FD04 /* HabitTrackerApp.swift */; };
 		914D19804D4A749F29AFEE06 /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D46FD911D775C3528AC32AF7 /* InstrumentSerif-Italic.ttf */; };
@@ -45,9 +49,11 @@
 		C3BA20FEB57DFBF33385AA7E /* ProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723CF53D841CC0F07D109079 /* ProgressBar.swift */; };
 		C7CFABC4105B959863040F61 /* AddHabitScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967F21BCBE01495F4ED07A7E /* AddHabitScreen.swift */; };
 		CFD412F9CA6967C42EF2AB32 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55508B34D2E5E44FB8A880A1 /* Store.swift */; };
+		D1C0E8B348CE91782B943766 /* ContributionGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845891D068AA9E59254951F3 /* ContributionGraph.swift */; };
 		D5810D717ADEDC21D3D076DB /* OnboardingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C45FB60814ED39B467A2CD1 /* OnboardingScreen.swift */; };
 		D935F228E03B693D4B716AC0 /* Karla-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1510CF27017DC9549A8A563B /* Karla-Regular.ttf */; };
 		E3772F658F543A5D13CAF1E8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6C6DE3EC8B38464A6729565C /* PrivacyInfo.xcprivacy */; };
+		E67671C31B86A23D2D19E082 /* InsightsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED10F78193ECCDA7E6691BE /* InsightsTests.swift */; };
 		F467C2C46331D0E92809FC1C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C2DE5CBC676B2300613B4B /* RootView.swift */; };
 		F488FB0EB3E4079BD660A8DE /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E9FDFECADEAF8DBEB3A9B6 /* Layout.swift */; };
 		FD02A6F95D30D16059CE66B6 /* AppPrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7432C94F8D8F4678FE645C1D /* AppPrefs.swift */; };
@@ -65,8 +71,10 @@
 
 /* Begin PBXFileReference section */
 		004D5DF10775A860CE77FD04 /* HabitTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerApp.swift; sourceTree = "<group>"; };
+		06DE17006B1F706A0938F57D /* LoggingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggingTests.swift; sourceTree = "<group>"; };
 		115941B367C4A53271505FD2 /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTime.swift; sourceTree = "<group>"; };
 		1510CF27017DC9549A8A563B /* Karla-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Karla-Regular.ttf"; sourceTree = "<group>"; };
+		1558C75DA3D6E8AB4368AEAB /* AmountEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmountEntry.swift; sourceTree = "<group>"; };
 		1AF215710299F97F846CA7C4 /* TodayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayScreen.swift; sourceTree = "<group>"; };
 		1DC7600C4C8E25E278748FCC /* TabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBar.swift; sourceTree = "<group>"; };
 		255CEF362F6E5595B4FAA85C /* TimePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePicker.swift; sourceTree = "<group>"; };
@@ -95,6 +103,7 @@
 		783C43E0DE290526B69C86BE /* MonthCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendar.swift; sourceTree = "<group>"; };
 		7B0D7D23AFC446A072A0F1D1 /* StatisticsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsScreen.swift; sourceTree = "<group>"; };
 		7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		845891D068AA9E59254951F3 /* ContributionGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContributionGraph.swift; sourceTree = "<group>"; };
 		90E9FDFECADEAF8DBEB3A9B6 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
 		934C18A7F2EB31512CEB4A4E /* HabitTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HabitTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		967F21BCBE01495F4ED07A7E /* AddHabitScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddHabitScreen.swift; sourceTree = "<group>"; };
@@ -104,14 +113,17 @@
 		AEEC9B51918F5D2CCC4735BD /* HabitLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLog.swift; sourceTree = "<group>"; };
 		C477EE55CBA06883C633C672 /* PaywallScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallScreen.swift; sourceTree = "<group>"; };
 		C93D07E9F8C911755CF2553C /* RowGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowGroup.swift; sourceTree = "<group>"; };
+		CED10F78193ECCDA7E6691BE /* InsightsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsTests.swift; sourceTree = "<group>"; };
 		D46FD911D775C3528AC32AF7 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Italic.ttf"; sourceTree = "<group>"; };
 		DA1712AD07B51CD754B87CDF /* HabitSetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitSetupScreen.swift; sourceTree = "<group>"; };
+		DACD5C2B2B96ABF9D0967EED /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
+		E9418DF48EA76473F39FD868 /* StatisticsInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsInsights.swift; sourceTree = "<group>"; };
 		E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Habit+Tracking.swift"; sourceTree = "<group>"; };
 		EB34DD28AC5140D8C52E80A7 /* Chips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chips.swift; sourceTree = "<group>"; };
 		F8C2B66A24F144F48BF9D0A7 /* DataExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExport.swift; sourceTree = "<group>"; };
 		FA89B49696CB52D519867261 /* SeedData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedData.swift; sourceTree = "<group>"; };
 		FF9D38D77EB078C801B84738 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		"TEMP_55D55D9A-CAA0-42B1-923D-E860AA470482" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		"TEMP_6B57F746-0816-4107-BA0C-AF86C9401887" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -129,6 +141,8 @@
 		205CA1387EBF37732F8D43CC /* HabitTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				CED10F78193ECCDA7E6691BE /* InsightsTests.swift */,
+				06DE17006B1F706A0938F57D /* LoggingTests.swift */,
 				38CD6AD067E460BC3D7DD9E0 /* StoreTests.swift */,
 			);
 			path = HabitTrackerTests;
@@ -143,6 +157,7 @@
 				757134E23848D6632FD1EA11 /* Habit.swift */,
 				E9CFDE0FF4FD4E25F0B37A40 /* Habit+Tracking.swift */,
 				AEEC9B51918F5D2CCC4735BD /* HabitLog.swift */,
+				DACD5C2B2B96ABF9D0967EED /* Insights.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -176,6 +191,7 @@
 				C477EE55CBA06883C633C672 /* PaywallScreen.swift */,
 				27C2DE5CBC676B2300613B4B /* RootView.swift */,
 				7B72B865940FD90B5D1B8193 /* SettingsScreen.swift */,
+				E9418DF48EA76473F39FD868 /* StatisticsInsights.swift */,
 				7B0D7D23AFC446A072A0F1D1 /* StatisticsScreen.swift */,
 				1AF215710299F97F846CA7C4 /* TodayScreen.swift */,
 			);
@@ -211,8 +227,10 @@
 		BEDE52E5F3AB6A394DA22A26 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				1558C75DA3D6E8AB4368AEAB /* AmountEntry.swift */,
 				510BEEA8F122E30E55C40BA5 /* Buttons.swift */,
 				EB34DD28AC5140D8C52E80A7 /* Chips.swift */,
+				845891D068AA9E59254951F3 /* ContributionGraph.swift */,
 				783C43E0DE290526B69C86BE /* MonthCalendar.swift */,
 				723CF53D841CC0F07D109079 /* ProgressBar.swift */,
 				C93D07E9F8C911755CF2553C /* RowGroup.swift */,
@@ -256,10 +274,10 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
-		"TEMP_2D5FDE95-B890-480C-A1F6-9516508651B1" /* habit-tracker */ = {
+		"TEMP_2F9B123C-3F69-4F75-8994-B881C9EBCB9C" /* habit-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_55D55D9A-CAA0-42B1-923D-E860AA470482" /* Signing.xcconfig */,
+				"TEMP_6B57F746-0816-4107-BA0C-AF86C9401887" /* Signing.xcconfig */,
 			);
 			path = "habit-tracker";
 			sourceTree = "<group>";
@@ -368,6 +386,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E67671C31B86A23D2D19E082 /* InsightsTests.swift in Sources */,
+				0456BF0E96AD22EF35E71EA2 /* LoggingTests.swift in Sources */,
 				5E29FCB41609C0EAE33A21C6 /* StoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -377,12 +397,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				C7CFABC4105B959863040F61 /* AddHabitScreen.swift in Sources */,
+				04F613353784A4AB00BB6500 /* AmountEntry.swift in Sources */,
 				FD02A6F95D30D16059CE66B6 /* AppPrefs.swift in Sources */,
 				8100D4F50DF6E268949E18BB /* ArchivedHabitsScreen.swift in Sources */,
 				258E90A541CB0298235DD005 /* Buttons.swift in Sources */,
 				56CF8A2660908994D9B6BDD3 /* Chips.swift in Sources */,
 				17442D72941917B27BF0BA23 /* ClockTime.swift in Sources */,
 				2A6D1C5AD98416C6C5769829 /* Colors.swift in Sources */,
+				D1C0E8B348CE91782B943766 /* ContributionGraph.swift in Sources */,
 				9BA03372AEA3AEDF811D2DFD /* DataExport.swift in Sources */,
 				07BE1CDB495E028DA4ED5E28 /* Enums.swift in Sources */,
 				776A2481C35F3368FFFF1141 /* Habit+Tracking.swift in Sources */,
@@ -393,6 +415,7 @@
 				491C060506E25D0EB48F5744 /* HabitSetupScreen.swift in Sources */,
 				8FD490931E9356CD4D7E247D /* HabitTrackerApp.swift in Sources */,
 				6608ED1AD09D7CAD2B0B3CC9 /* HabitsScreen.swift in Sources */,
+				830969FDEE457EE2904FCE6B /* Insights.swift in Sources */,
 				F488FB0EB3E4079BD660A8DE /* Layout.swift in Sources */,
 				652AC95D81053F77945CDF76 /* MonthCalendar.swift in Sources */,
 				BBB0E859C81AFB7FC8E3BD93 /* NotificationScheduler.swift in Sources */,
@@ -405,6 +428,7 @@
 				42BBCF183CE02F6C3791453D /* ScreenScaffold.swift in Sources */,
 				2C4CF9CFF4C5EAE4094E9F80 /* SeedData.swift in Sources */,
 				7C923DBB1E3CEC6AA858BA8A /* SettingsScreen.swift in Sources */,
+				7B667DFE1C245EC34626C61E /* StatisticsInsights.swift in Sources */,
 				ACE583262AA0C3844E405E84 /* StatisticsScreen.swift in Sources */,
 				CFD412F9CA6967C42EF2AB32 /* Store.swift in Sources */,
 				3944922A771D6500D72D665C /* TabBar.swift in Sources */,
@@ -428,7 +452,7 @@
 /* Begin XCBuildConfiguration section */
 		3789F377332BFE621A8243FC /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_55D55D9A-CAA0-42B1-923D-E860AA470482" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_6B57F746-0816-4107-BA0C-AF86C9401887" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -484,7 +508,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -504,7 +528,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -518,7 +542,7 @@
 		};
 		8906BDEADDB4EC1C0043F70C /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_55D55D9A-CAA0-42B1-923D-E860AA470482" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_6B57F746-0816-4107-BA0C-AF86C9401887" /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -592,7 +616,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -606,7 +630,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

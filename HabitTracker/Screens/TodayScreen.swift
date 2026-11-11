@@ -6,6 +6,7 @@ struct TodayScreen: View {
     @Query(sort: [SortDescriptor(\Habit.sortIndex)]) private var habits: [Habit]
     @Query private var prefsList: [AppPrefs]
     @State private var viewStyleOverride: HomeViewStyle? = nil
+    @State private var entering: Habit? = nil
     var onOpenHabit: (Habit) -> Void
     var onAdd: () -> Void
 
@@ -43,6 +44,7 @@ struct TodayScreen: View {
                 .scrollIndicators(.hidden)
             }
         }
+        .amountEntry(for: $entering)
     }
 
     private var restState: some View {
@@ -166,6 +168,7 @@ struct TodayScreen: View {
                 }, onQuickAdd: {
                     quickAdd(habit)
                 })
+                .contextMenu { entryMenu(habit) }
             }
             if !unfinished.isEmpty { HRule() }
 
@@ -185,6 +188,7 @@ struct TodayScreen: View {
                 }, onQuickAdd: {
                     quickAdd(habit)
                 })
+                .contextMenu { entryMenu(habit) }
             }
             if !completedToday.isEmpty { HRule() }
             Spacer(minLength: 24)
@@ -203,6 +207,7 @@ struct TodayScreen: View {
                     onOpen: { onOpenHabit(habit) },
                     onQuickAdd: { quickAdd(habit) }
                 )
+                .contextMenu { entryMenu(habit) }
             }
         }
         .padding(.horizontal, AppMetrics.hPadding)
@@ -214,7 +219,23 @@ struct TodayScreen: View {
     }
 
     private func quickAdd(_ habit: Habit) {
-        if habit.isQuantified { habit.add(1, in: ctx) } else { habit.toggleDone(in: ctx) }
+        if habit.isQuantified { habit.add(habit.quickStep, in: ctx) } else { habit.toggleDone(in: ctx) }
+    }
+
+    /// Long press: type in an amount, or step it up or down by the habit's own sizes.
+    @ViewBuilder
+    private func entryMenu(_ habit: Habit) -> some View {
+        if habit.isQuantified {
+            Button { entering = habit } label: { Label("Enter amount…", systemImage: "number") }
+            ForEach(habit.logSteps, id: \.self) { step in
+                Button { habit.add(step, in: ctx) } label: { Label("Add \(habit.formatWithUnit(step))", systemImage: "plus") }
+            }
+            Button { habit.add(-habit.quickStep, in: ctx) } label: {
+                Label("Remove \(habit.formatWithUnit(habit.quickStep))", systemImage: "minus")
+            }
+            .disabled((habit.todayLog()?.value ?? 0) <= 0)
+        }
+        Button { onOpenHabit(habit) } label: { Label("Open", systemImage: "chevron.right") }
     }
 }
 
@@ -270,7 +291,7 @@ private struct TodayListRow: View {
     @ViewBuilder
     private var trailingView: some View {
         if habit.isQuantified {
-            actionPill("+1", action: onQuickAdd)
+            actionPill("+\(habit.format(habit.quickStep))", action: onQuickAdd)
         } else if done {
             Text("kept").font(AppFont.mono(11)).foregroundStyle(AppColor.inkMute)
         } else {
@@ -327,7 +348,7 @@ private struct TodayGridTile: View {
                 Spacer(minLength: 4)
                 if habit.isQuantified {
                     Button(action: onQuickAdd) {
-                        Text("+1")
+                        Text("+\(habit.format(habit.quickStep))")
                             .font(AppFont.mono(12))
                             .foregroundStyle(AppColor.accent)
                             .fixedSize()
