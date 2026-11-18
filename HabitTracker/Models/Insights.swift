@@ -251,6 +251,24 @@ enum Insights {
         String(format: "%02d:%02d", minute / 60, minute % 60)
     }
 
+    // MARK: Best weekdays
+
+    struct WeekdayRank {
+        var weekday: Int
+        var rate: Int
+        var kept: Int
+        var due: Int
+    }
+
+    /// Weekdays with something due, best share kept first. On a tie, the day with more kept
+    /// (more evidence) comes first, then the earlier weekday.
+    static func rankWeekdays(_ totals: [Int: (due: Int, kept: Int)]) -> [WeekdayRank] {
+        totals.compactMap { day, t in
+            percent(t.kept, of: t.due).map { WeekdayRank(weekday: day, rate: $0, kept: t.kept, due: t.due) }
+        }
+        .sorted { ($0.rate, $0.kept, -$0.weekday) > ($1.rate, $1.kept, -$1.weekday) }
+    }
+
     // MARK: Linked misses
 
     /// How missing one habit goes together with missing another, over the days both were due.

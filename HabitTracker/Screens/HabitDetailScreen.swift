@@ -229,7 +229,7 @@ struct HabitDetailScreen: View {
         if let gap = recovery?.currentGap, gap > 0 { back = "off \(days(gap))" }
         else if let typical = recovery?.typicalDays { back = typical <= 1 ? "next day" : "~\(days(typical))" }
         else { back = "no slips" }
-        let risky = report.risk.flatMap { $0.standsOut ? Habit.dayShort($0.weekday) + "s" : nil } ?? "none yet"
+        let risky = report.risk.flatMap { $0.standsOut ? ClockTime.weekdayName($0.weekday) + "s" : nil } ?? "none yet"
         return VStack(alignment: .leading, spacing: 12) {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 stat("Momentum", report.momentum.map { "\($0) / 100" } ?? "–")

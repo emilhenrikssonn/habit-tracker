@@ -65,6 +65,19 @@ final class BackupAndLinkTests: XCTestCase {
         XCTAssertEqual(Insights.linkMeaning(-1), "When you miss one, you usually keep the other, as if they compete for the same time.")
     }
 
+    func testWeekdaysRankBestFirst() {
+        let ranked = Insights.rankWeekdays([
+            1: (due: 10, kept: 5),   // 50%
+            3: (due: 10, kept: 9),   // 90%
+            5: (due: 4, kept: 4),    // 100%
+            6: (due: 20, kept: 18),  // 90%, more kept than Wednesday
+            7: (due: 0, kept: 0),    // nothing due: left out
+        ])
+        XCTAssertEqual(ranked.map(\.weekday), [5, 6, 3, 1])
+        XCTAssertEqual(ranked.map(\.rate), [100, 90, 90, 50])
+        XCTAssertEqual(ranked.first?.kept, 4)
+    }
+
     func testScoreFormatting() {
         XCTAssertEqual(PairLinkBlock.formatScore(0.4234), "+0.42")
         XCTAssertEqual(PairLinkBlock.formatScore(-0.5), "-0.50")

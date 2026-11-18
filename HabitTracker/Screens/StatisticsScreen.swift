@@ -19,6 +19,7 @@ struct StatisticsScreen: View {
     @State private var selection: Set<PersistentIdentifier> = []
     @State private var pickingHabits = false
 
+    private static let topID = "statsTop"
     private var active: [Habit] { habits.filter { !$0.archived } }
     private var shown: [Habit] {
         let picked = active.filter { selection.contains($0.persistentModelID) }
@@ -32,7 +33,9 @@ struct StatisticsScreen: View {
             rangeTabs
             dateLine
             if !active.isEmpty { scopeLine }
+            ScrollViewReader { proxy in
             ScrollView {
+                Color.clear.frame(height: 0).id(Self.topID)
                 if active.isEmpty {
                     emptyState
                 } else {
@@ -56,6 +59,12 @@ struct StatisticsScreen: View {
                     }
                     .padding(.horizontal, AppMetrics.hPadding)
                 }
+            }
+            // New habits or new dates start from the top, so the first numbers seen are about them.
+            .onChange(of: selection) { _, _ in proxy.scrollTo(Self.topID, anchor: .top) }
+            .onChange(of: range) { _, _ in proxy.scrollTo(Self.topID, anchor: .top) }
+            .onChange(of: customStart) { _, _ in proxy.scrollTo(Self.topID, anchor: .top) }
+            .onChange(of: customEnd) { _, _ in proxy.scrollTo(Self.topID, anchor: .top) }
             }
         }
         .sheet(isPresented: $pickingDates) {
@@ -241,8 +250,46 @@ struct StatisticsScreen: View {
                 .font(AppFont.sans(13))
                 .foregroundStyle(AppColor.inkMute)
                 .fixedSize(horizontal: false, vertical: true)
+            weekdayRanking(Insights.rankWeekdays(s.weekdayTotals))
         }
         .id(weekStart)
+    }
+
+    /// Every weekday with something due, best first, with its share kept and the counts behind it.
+    @ViewBuilder
+    private func weekdayRanking(_ ranked: [Insights.WeekdayRank]) -> some View {
+        if ranked.count >= 2 {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("BEST DAYS, RANKED")
+                    .font(AppFont.mono(10, weight: .medium)).tracking(1.6).foregroundStyle(AppColor.inkMute)
+                    .padding(.top, 4).padding(.bottom, 8)
+                HRule()
+                ForEach(Array(ranked.enumerated()), id: \.element.weekday) { i, day in
+                    HStack(spacing: 12) {
+                        Text("\(i + 1)")
+                            .font(AppFont.mono(11))
+                            .foregroundStyle(i == 0 ? AppColor.accent : AppColor.inkMute)
+                            .frame(width: 14, alignment: .leading)
+                        Text(ClockTime.weekdayName(day.weekday))
+                            .font(AppFont.serif(19)).foregroundStyle(AppColor.ink)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .frame(width: 104, alignment: .leading)
+                        ThinBar(progress: Double(day.rate) / 100, height: 4, track: AppColor.border,
+                                fill: i == 0 ? AppColor.accent : AppColor.accentMid)
+                            .frame(height: 4)
+                        Text("\(day.rate)%")
+                            .font(AppFont.mono(12)).foregroundStyle(i == 0 ? AppColor.accent : AppColor.ink)
+                            .frame(width: 42, alignment: .trailing)
+                        Text("\(day.kept)/\(day.due)")
+                            .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    .padding(.vertical, 9)
+                    HRule()
+                }
+            }
+        }
     }
 
     private func weekdayInsight(_ s: Summary) -> AttributedString {
@@ -362,6 +409,8 @@ private struct Summary {
     var bestRun = 0
     /// Monday=1…Sunday=7 → % kept, nil when nothing was due that weekday.
     var weekdayRate: [Int: Int?] = [:]
+    /// Monday=1…Sunday=7 → habit-days due and kept on that weekday.
+    var weekdayTotals: [Int: (due: Int, kept: Int)] = [:]
 
     var rate: Int { due == 0 ? 0 : Int((Double(kept) / Double(due) * 100).rounded()) }
 
@@ -396,6 +445,7 @@ private struct Summary {
                 run = 0
             }
         }
+        weekdayTotals = byWeekday
         for weekday in 1...7 {
             let w = byWeekday[weekday]
             weekdayRate[weekday] = (w?.due ?? 0) == 0 ? nil : Int((Double(w!.kept) / Double(w!.due) * 100).rounded())
