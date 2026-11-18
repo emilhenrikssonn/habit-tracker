@@ -13,13 +13,21 @@ Deeper statistics:
 • Comebacks: how quickly you get back on track after a miss
 • A year-at-a-glance grid, for all habits and for each one
 • Personal records: longest streak, perfect weeks, best month
+• Linked misses: pick two habits to see whether missing one goes with missing the other
+• Your best weekdays, ranked from best to worst
 
 Easier logging:
 • Type in an amount directly, like today's steps
 • Step buttons now fit the size of your goal: +100 and +1000 for 8000 steps
 • Long-press a habit on Today to enter or adjust an amount
 
-You can now delete a habit straight from its page, not only after archiving it.
+Move to a new iPhone:
+• Back up all your habits, history and settings to a file, and restore it on your new phone
+
+Also new:
+• "How Habits works", a guide to every feature, in Settings
+• Log everything in the evening? Turn off time-of-day stats in Settings
+• Delete a habit straight from its page, not only after archiving it
 
 ## Name (30 max)
 
@@ -63,7 +71,8 @@ TODAY AT A GLANCE
 
 STATISTICS THAT MEAN SOMETHING
 • Completion rate, perfect days and best run
-• See which weekdays work best for you, and weekdays against weekends
+• See which weekdays work best for you, ranked, and weekdays against weekends
+• Linked misses: find out whether skipping one habit drags another down with it
 • Momentum that shows whether you're speeding up or slowing down
 • When in the day you do your habits, and which ones you do back to back
 • The weekday your streaks usually break, and how fast you bounce back
@@ -79,6 +88,7 @@ GENTLE REMINDERS
 PRIVATE BY DESIGN
 • No account, no ads, no tracking
 • Your data never leaves your iPhone
+• Back up to a file and restore it on a new iPhone
 • Export everything as a CSV file whenever you want
 
 Dark and light themes included.
@@ -102,7 +112,7 @@ Primary: Health & Fitness. Secondary: Productivity.
 ## URLs
 
 - Privacy policy: https://emilhenrikssonn.github.io/habit-tracker/privacy-policy.html
-- Support URL: needed, not created yet. A simple page with a contact email is enough.
+- Support URL: https://emilhenrikssonn.github.io/habit-tracker/support.html (contact via GitHub issues)
 
 ## Subscriptions (App Store Connect)
 
