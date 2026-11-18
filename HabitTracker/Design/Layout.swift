@@ -5,8 +5,6 @@ enum AppMetrics {
     static let cardRadius: CGFloat = 18
     static let tileRadius: CGFloat = 20
     static let inputRadius: CGFloat = 14
-    static let smallRadius: CGFloat = 12
-    static let pillRadius: CGFloat = 999
 }
 
 struct HRule: View {

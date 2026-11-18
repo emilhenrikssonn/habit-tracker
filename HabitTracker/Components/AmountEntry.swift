@@ -27,10 +27,14 @@ struct AmountEntryAlert: ViewModifier {
 
     private var title: String { "Today's \(habit?.name ?? "amount")" }
 
-    /// Accepts "8000", "8 000", "2,5" and "2.5".
+    /// Largest amount that can be logged for one day.
+    static let maxValue: Double = 10_000_000
+
+    /// Accepts "8000", "8 000", "2,5" and "2.5". Rejects negatives, "inf", "nan" and anything above `maxValue`.
     static func parse(_ text: String) -> Double? {
         let cleaned = text.filter { !$0.isWhitespace }.replacingOccurrences(of: ",", with: ".")
-        return Double(cleaned).flatMap { $0 >= 0 ? $0 : nil }
+        guard let value = Double(cleaned), value.isFinite, value >= 0, value <= maxValue else { return nil }
+        return value
     }
 }
 

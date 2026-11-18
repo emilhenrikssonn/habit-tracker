@@ -30,4 +30,40 @@ final class LoggingTests: XCTestCase {
         XCTAssertNil(AmountEntryAlert.parse("abc"))
         XCTAssertNil(AmountEntryAlert.parse("-3"))
     }
+
+    func testTypedAmountsRejectValuesThatCannotBeShown() {
+        XCTAssertNil(AmountEntryAlert.parse("inf"))
+        XCTAssertNil(AmountEntryAlert.parse("nan"))
+        XCTAssertNil(AmountEntryAlert.parse("1e400"))
+        XCTAssertNil(AmountEntryAlert.parse("99999999999999999999"))
+        XCTAssertEqual(AmountEntryAlert.parse("10000000"), 10_000_000)
+        XCTAssertNil(AmountEntryAlert.parse("10000001"))
+    }
+
+    func testFormatDoesNotTrapOnHugeValues() {
+        let habit = Habit(name: "x", category: .health, tracking: .amount, dailyGoal: 8)
+        XCTAssertEqual(habit.format(8), "8")
+        XCTAssertEqual(habit.format(2.5), "2.5")
+        XCTAssertEqual(habit.format(.infinity), "inf")
+        XCTAssertEqual(habit.format(1e20), "100000000000000000000")
+    }
+
+    func testTypedTextIsCleanedBeforeSaving() {
+        XCTAssertEqual("  Read  ".cleanedInput(maxLength: 60), "Read")
+        XCTAssertEqual("Read\nbooks\u{0}".cleanedInput(maxLength: 60), "Read books")
+        XCTAssertEqual("👨‍👩‍👧 Family time".cleanedInput(maxLength: 60), "👨‍👩‍👧 Family time")
+        XCTAssertEqual(String(repeating: "a", count: 100).cleanedInput(maxLength: 60).count, 60)
+        XCTAssertEqual("abc   def".cleanedInput(maxLength: 4), "abc")
+        XCTAssertEqual("\n\t ".cleanedInput(maxLength: 60), "")
+    }
+
+    func testExportedFieldsCannotRunAsFormulas() {
+        XCTAssertEqual(DataExport.escape("Read"), "Read")
+        XCTAssertEqual(DataExport.escape("=HYPERLINK(\"x\")"), "\"'=HYPERLINK(\"\"x\"\")\"")
+        XCTAssertEqual(DataExport.escape("+1"), "'+1")
+        XCTAssertEqual(DataExport.escape("-"), "'-")
+        XCTAssertEqual(DataExport.escape("@SUM(A1)"), "'@SUM(A1)")
+        XCTAssertEqual(DataExport.escape("a,b"), "\"a,b\"")
+        XCTAssertEqual(DataExport.escape("a\rb"), "\"a\rb\"")
+    }
 }

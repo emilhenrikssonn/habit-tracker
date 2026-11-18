@@ -25,10 +25,7 @@ enum AppColor {
     static let inkOnAccent = themed(dark: 0x0D100E, light: 0xFFFFFF)
     static let outline = themed(dark: 0x3C4642, light: 0xB4BEB8)
     static let accentSoft = themed(dark: 0x9FB3A7, light: 0x4F6B5B)
-    static let accentSoft2 = themed(dark: 0x93AB9D, light: 0x5A7868)
     static let accentSoftLight = themed(dark: 0xD8ECE1, light: 0x14532F)
-    static let accentSoftStrong = themed(dark: 0x9FD9B8, light: 0x2E7D54)
-    static let barTrack = themed(dark: 0x232A26, light: 0xE4E9E6)
     static let calendarKept = themed(dark: 0x1C3527, light: 0xCDEBD9)
     static let dimOff = themed(dark: 0x4F5A55, light: 0xB0B8B3)
 

@@ -8,10 +8,12 @@ struct RootView: View {
     private var store: Store { Store.shared }
 
     @State private var tab: RootTab = {
+        #if DEBUG
         if let tabArg = ProcessInfo.processInfo.environment["START_TAB"],
            let i = Int(tabArg), let t = RootTab(rawValue: i) {
             return t
         }
+        #endif
         return .today
     }()
     @State private var addHabitPresented: Bool = ProcessInfo.processInfo.environment["OPEN_ADD"] == "1"

@@ -19,14 +19,6 @@ enum RootTab: Int, CaseIterable, Identifiable {
         case .settings: return "gearshape"
         }
     }
-    var shortLabel: String {
-        switch self {
-        case .today: return "TOD"
-        case .habits: return "HAB"
-        case .stats: return "STA"
-        case .settings: return "SET"
-        }
-    }
 }
 
 struct AppTabBar: View {

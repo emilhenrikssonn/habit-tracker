@@ -112,7 +112,7 @@ struct SettingsScreen: View {
             TextField("Name", text: $nameDraft)
             Button("Cancel", role: .cancel) {}
             Button("Save") {
-                let trimmed = nameDraft.trimmingCharacters(in: .whitespaces)
+                let trimmed = nameDraft.cleanedInput(maxLength: TextLimit.displayName)
                 prefs.displayName = trimmed.isEmpty ? "You" : trimmed
                 try? ctx.save()
             }

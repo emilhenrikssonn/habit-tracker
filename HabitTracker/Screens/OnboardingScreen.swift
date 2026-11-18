@@ -12,10 +12,12 @@ struct OnboardingScreen: View {
     }
 
     @State private var step: Step = {
+        #if DEBUG
         if let arg = ProcessInfo.processInfo.environment["ONBOARDING_STEP"],
            let i = Int(arg), let s = Step(rawValue: i) {
             return s
         }
+        #endif
         return .welcome
     }()
     @State private var name = ""
@@ -420,7 +422,7 @@ struct OnboardingScreen: View {
     private func count(_ n: Int) -> String { n == 1 ? "1 habit" : "\(n) habits" }
 
     private func finish() {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.cleanedInput(maxLength: TextLimit.displayName)
         prefs.displayName = trimmed.isEmpty ? "You" : trimmed
 
         var sortIndex = (habits.map(\.sortIndex).max() ?? -1) + 1

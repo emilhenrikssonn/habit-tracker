@@ -132,3 +132,27 @@ final class Habit {
         }
     }
 }
+
+/// Longest text accepted from each field, in characters.
+enum TextLimit {
+    static let habitName = 60
+    static let unit = 20
+    static let category = 30
+    static let displayName = 40
+}
+
+extension String {
+    /// Typed or pasted text, ready to save: control characters and line breaks become spaces,
+    /// the ends are trimmed and the length is capped. Emoji and other joined characters are kept.
+    func cleanedInput(maxLength: Int) -> String {
+        let scalars = unicodeScalars.map { scalar -> Unicode.Scalar in
+            let isBreak = scalar.properties.generalCategory == .control
+                || scalar.properties.generalCategory == .lineSeparator
+                || scalar.properties.generalCategory == .paragraphSeparator
+            return isBreak ? " " : scalar
+        }
+        let flattened = String(String.UnicodeScalarView(scalars))
+        let trimmed = flattened.trimmingCharacters(in: .whitespaces)
+        return String(trimmed.prefix(maxLength)).trimmingCharacters(in: .whitespaces)
+    }
+}

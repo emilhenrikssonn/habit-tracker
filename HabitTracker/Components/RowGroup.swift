@@ -1,16 +1,5 @@
 import SwiftUI
 
-struct DividedRow<Content: View>: View {
-    var showTopRule: Bool = true
-    @ViewBuilder var content: () -> Content
-    var body: some View {
-        VStack(spacing: 0) {
-            if showTopRule { HRule() }
-            content()
-        }
-    }
-}
-
 struct DisclosureRow: View {
     let title: String
     var titleFont: Font = AppFont.serif(20)

@@ -15,7 +15,9 @@ extension Habit {
     }
 
     func format(_ value: Double) -> String {
-        value.rounded() == value ? "\(Int(value))" : String(format: "%.1f", value)
+        // Int(_:) traps on infinite or huge values, so only whole numbers well inside Int's range go through it.
+        guard value.isFinite, abs(value) < 1e15 else { return String(format: "%.0f", value) }
+        return value.rounded() == value ? "\(Int(value))" : String(format: "%.1f", value)
     }
 
     /// "18 min", "20 pages", "3" — value followed by the habit's unit.

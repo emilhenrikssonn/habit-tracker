@@ -407,7 +407,7 @@ struct HabitSetupScreen: View {
     }
 
     private func save() {
-        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let trimmedName = name.cleanedInput(maxLength: TextLimit.habitName)
         guard !trimmedName.isEmpty else {
             nameMissing = true
             nameFocused = true
@@ -424,7 +424,7 @@ struct HabitSetupScreen: View {
         case .time:
             h.unit = "min"; h.dailyGoal = timeGoal
         case .amount:
-            h.unit = amountUnit.trimmingCharacters(in: .whitespaces); h.dailyGoal = amountGoal
+            h.unit = amountUnit.cleanedInput(maxLength: TextLimit.unit); h.dailyGoal = amountGoal
         }
         h.repeatMode = repeatMode
         h.weekdays = Array(1...7) // weekdays off are rest days now
@@ -530,7 +530,7 @@ private struct CategoryPickerSheet: View {
         }
     }
 
-    private var trimmedNew: String { newName.trimmingCharacters(in: .whitespaces) }
+    private var trimmedNew: String { newName.cleanedInput(maxLength: TextLimit.category) }
 
     private func addCategory() {
         let name = trimmedNew

@@ -30,8 +30,14 @@ enum DataExport {
         }
     }
 
-    private static func escape(_ field: String) -> String {
-        guard field.contains(where: { ",\"\n".contains($0) }) else { return field }
+    static func escape(_ field: String) -> String {
+        var field = field
+        // A name like "=HYPERLINK(...)" would run as a formula when the file is opened in a spreadsheet,
+        // so text starting with a formula character gets a leading apostrophe and stays plain text.
+        if let first = field.unicodeScalars.first, "=+-@\t\r".unicodeScalars.contains(first) {
+            field = "'" + field
+        }
+        guard field.contains(where: { ",\"\n\r".contains($0) }) else { return field }
         return "\"" + field.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 }
