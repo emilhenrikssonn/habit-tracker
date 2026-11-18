@@ -9,6 +9,7 @@ private enum StatsRange: String, CaseIterable, Identifiable {
 /// Completion for a date range, across all active habits or a chosen set of them. Archived habits are left out.
 struct StatisticsScreen: View {
     @Query(sort: [SortDescriptor(\Habit.sortIndex)]) private var habits: [Habit]
+    @Query private var prefsList: [AppPrefs]
     @AppStorage("weekStart") private var weekStart = 1
     @State private var range: StatsRange = .month
     @State private var customStart = Calendar.current.date(byAdding: .day, value: -29, to: Calendar.current.startOfDay(for: Date()))!
@@ -39,11 +40,14 @@ struct StatisticsScreen: View {
                     let report = InsightReport(habits: shown, start: interval.start, end: interval.end)
                     VStack(alignment: .leading, spacing: 24) {
                         completionBlock(summary)
+                        PairLinkBlock(report: report)
                         MomentumBlock(report: report)
                         weekdayBlock(summary)
                         WeekendSplitBlock(report: report)
-                        TimeOfDayBlock(report: report)
-                        RoutinesBlock(report: report)
+                        if prefsList.first?.timeStatsEnabled ?? true {
+                            TimeOfDayBlock(report: report)
+                            RoutinesBlock(report: report)
+                        }
                         SlipsBlock(report: report)
                         YearGraphBlock(report: report)
                         RecordsBlock(report: report)
@@ -87,7 +91,11 @@ struct StatisticsScreen: View {
         if whole && touched.count <= 2 {
             return touched.map { Habit.categoryName(for: $0.category) }.joined(separator: " + ")
         }
-        return shown.count == 1 ? shown[0].name : "\(shown.count) habits"
+        switch shown.count {
+        case 1: return shown[0].name
+        case 2: return "\(shown[0].name) + \(shown[1].name)"
+        default: return "\(shown.count) habits"
+        }
     }
 
     private var scopeLine: some View {
@@ -438,7 +446,7 @@ private struct HabitFilterSheet: View {
                                 HRule()
                             }
                         }
-                        Text("Tap a category to pick everything in it, or pick habits one by one.")
+                        Text("Tap a category to pick everything in it, or pick habits one by one. Pick exactly two habits to see how missing one goes with missing the other.")
                             .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
                             .padding(.top, 12).padding(.bottom, 24)
                     }

@@ -21,13 +21,7 @@ enum DataExport {
             }
         }
         let name = "habits-\(Date().formatted(dayFmt)).csv"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
-        do {
-            try lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
-            return url
-        } catch {
-            return nil
-        }
+        return ExportFolder.write(Data(lines.joined(separator: "\n").utf8), named: name)
     }
 
     static func escape(_ field: String) -> String {

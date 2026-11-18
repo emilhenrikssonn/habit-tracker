@@ -3,6 +3,7 @@ import SwiftData
 
 struct HabitDetailScreen: View {
     @Environment(\.modelContext) private var ctx
+    @Query private var prefsList: [AppPrefs]
     let habit: Habit
     var onClose: () -> Void
     /// Asks the presenter to delete the habit once this screen has closed.
@@ -218,6 +219,8 @@ struct HabitDetailScreen: View {
 
     private func days(_ n: Int) -> String { n == 1 ? "1 day" : "\(n) days" }
 
+    private var timeStatsEnabled: Bool { prefsList.first?.timeStatsEnabled ?? true }
+
     private var insightsBlock: some View {
         let today = Calendar.current.startOfDay(for: Date())
         let report = InsightReport(habits: [habit], start: Calendar.current.date(byAdding: .day, value: -89, to: today)!, end: today)
@@ -231,7 +234,11 @@ struct HabitDetailScreen: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 stat("Momentum", report.momentum.map { "\($0) / 100" } ?? "–")
                 stat("Back on track", back)
-                stat("Usually done", report.usualTimes.first.flatMap { $0 }.map(Insights.clock) ?? "–")
+                if timeStatsEnabled {
+                    stat("Usually done", report.usualTimes.first.flatMap { $0 }.map(Insights.clock) ?? "–")
+                } else {
+                    stat("Best month", report.bestMonth.map { "\($0.month.formatted(.dateTime.month(.abbreviated))) · \($0.rate)%" } ?? "–")
+                }
                 stat("Riskiest day", risky)
             }
             if let r = report.risk, r.standsOut {

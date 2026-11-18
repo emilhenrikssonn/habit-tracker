@@ -12,6 +12,9 @@ final class AppPrefs {
     var displayName: String = "You"
     var defaultViewRaw: String = HomeViewStyle.list.rawValue
     var customCategories: [String] = []
+    /// Whether Stats use the time of day habits are ticked off (time-of-day curve, usual times, routines).
+    /// Off for people who log everything at once, when those times would only show when they logged.
+    var timeStatsEnabled: Bool = true
 
     // Notifications. Times are "HH:mm"; weekdays are Monday=1…Sunday=7.
     var habitRemindersEnabled: Bool = true

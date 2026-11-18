@@ -251,6 +251,69 @@ enum Insights {
         String(format: "%02d:%02d", minute / 60, minute % 60)
     }
 
+    // MARK: Linked misses
+
+    /// How missing one habit goes together with missing another, over the days both were due.
+    struct PairLink {
+        var sharedDays: Int
+        var missedA: Int
+        var missedB: Int
+        var missedBoth: Int
+        /// % of the days A was missed that B was missed too. Nil when A was never missed.
+        var bWhenAMissed: Int? { Insights.percent(missedBoth, of: missedA) }
+        /// % of the days B was missed that A was missed too. Nil when B was never missed.
+        var aWhenBMissed: Int? { Insights.percent(missedBoth, of: missedB) }
+        /// % of all shared days each habit was missed, for comparison.
+        var aMissRate: Int? { Insights.percent(missedA, of: sharedDays) }
+        var bMissRate: Int? { Insights.percent(missedB, of: sharedDays) }
+        /// Correlation between the two habits' misses (phi coefficient), −1…1. Positive means they're
+        /// missed together, negative that missing one goes with keeping the other. Nil when either habit
+        /// was always kept or always missed, since then there's nothing to compare.
+        var score: Double?
+    }
+
+    static func pairLink(_ a: [DueDay], _ b: [DueDay]) -> PairLink {
+        let bByDate = Dictionary(b.map { ($0.date, $0.kept) }, uniquingKeysWith: { first, _ in first })
+        var shared = 0, missedA = 0, missedB = 0, both = 0
+        for day in a {
+            guard let bKept = bByDate[day.date] else { continue }
+            shared += 1
+            if !day.kept { missedA += 1 }
+            if !bKept { missedB += 1 }
+            if !day.kept && !bKept { both += 1 }
+        }
+        // 2×2 table: n11 both missed, n10 only A, n01 only B, n00 both kept.
+        let n11 = Double(both), n10 = Double(missedA - both), n01 = Double(missedB - both)
+        let n00 = Double(shared - missedA - missedB + both)
+        let spread = (n11 + n10) * (n01 + n00) * (n11 + n01) * (n10 + n00)
+        let score = spread > 0 ? (n11 * n00 - n10 * n01) / spread.squareRoot() : nil
+        return PairLink(sharedDays: shared, missedA: missedA, missedB: missedB, missedBoth: both, score: score)
+    }
+
+    /// Plain words for a link score.
+    static func linkStrength(_ score: Double) -> String {
+        switch abs(score) {
+        case ..<0.1: return "no real link"
+        case ..<0.3: return score > 0 ? "weak link" : "weak opposite link"
+        case ..<0.5: return score > 0 ? "moderate link" : "moderate opposite link"
+        default: return score > 0 ? "strong link" : "strong opposite link"
+        }
+    }
+
+    /// One sentence on what a link score means for the person's two habits.
+    static func linkMeaning(_ score: Double) -> String {
+        // Same thresholds as linkStrength, so the words and the label always agree.
+        let size = abs(score)
+        if size < 0.1 { return "Missing one says nothing about whether you'll miss the other." }
+        if score > 0 {
+            if size < 0.3 { return "Missing one makes missing the other a little more likely." }
+            return size < 0.5 ? "You often miss these two on the same days." : "You usually miss these two on the same days."
+        }
+        if size < 0.3 { return "When you miss one, you're a little more likely to keep the other." }
+        return size < 0.5 ? "When you miss one, you often keep the other."
+            : "When you miss one, you usually keep the other, as if they compete for the same time."
+    }
+
     // MARK: Routines
 
     struct Routine {
@@ -339,6 +402,8 @@ struct InsightReport {
     let split: [(weekday: Int?, weekend: Int?)]
     /// Share of due habits kept on each day of roughly the last year. Days with nothing due are absent.
     let dailyShare: [Date: Double]
+    /// How the two habits' misses go together in the range. Only worked out when exactly two habits are shown.
+    let pair: Insights.PairLink?
 
     init(habits: [Habit], start: Date, end: Date, today: Date = Date()) {
         let cal = Calendar.current
@@ -384,6 +449,7 @@ struct InsightReport {
         }
         weekdays = wd
         weekends = we
+        pair = inRange.count == 2 ? Insights.pairLink(inRange[0], inRange[1]) : nil
 
         let yearAgo = cal.date(byAdding: .day, value: -371, to: today)!
         var tally: [Date: (due: Int, kept: Int)] = [:]

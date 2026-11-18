@@ -1,14 +1,14 @@
 import SwiftUI
 import SwiftData
 
-/// First-launch flow: name, theme, a short tour, interests, first habits and notification choices.
+/// First-launch flow: name, theme, how they log, a short tour, interests, first habits and notification choices.
 struct OnboardingScreen: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: [SortDescriptor(\Habit.sortIndex)]) private var habits: [Habit]
     @Bindable var prefs: AppPrefs
 
     private enum Step: Int, CaseIterable {
-        case welcome, name, theme, tour, interests, habits, notifications, done
+        case welcome, name, theme, logging, tour, interests, habits, notifications, done
     }
 
     @State private var step: Step = {
@@ -26,6 +26,8 @@ struct OnboardingScreen: View {
     @State private var picked: Set<String> = []
     @State private var customSetup = false
     @State private var reminderTime = "08:00"
+    /// Whether they tick habits off as they go (true) or all at once (false). Nil until they pick.
+    @State private var logsAsTheyGo: Bool? = nil
     @FocusState private var nameFocused: Bool
 
     var body: some View {
@@ -77,7 +79,13 @@ struct OnboardingScreen: View {
         case .name:
             BottomBar { PrimaryButton(title: "Continue") { nameFocused = false; go(to: .theme) } }
         case .theme:
-            BottomBar { PrimaryButton(title: "Continue") { go(to: .tour) } }
+            BottomBar { PrimaryButton(title: "Continue") { go(to: .logging) } }
+        case .logging:
+            BottomBar {
+                PrimaryButton(title: "Continue") { go(to: .tour) }
+                    .disabled(logsAsTheyGo == nil)
+                    .opacity(logsAsTheyGo == nil ? 0.4 : 1)
+            }
         case .tour:
             BottomBar { PrimaryButton(title: "Got it") { go(to: .interests) } }
         case .interests:
@@ -128,6 +136,7 @@ struct OnboardingScreen: View {
         case .welcome: welcome
         case .name: namePage
         case .theme: themePage
+        case .logging: loggingPage
         case .tour: tour
         case .interests: interestsPage
         case .habits: habitsPage
@@ -212,6 +221,45 @@ struct OnboardingScreen: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
+                .fill(on ? AppColor.surfaceAccent : AppColor.surface))
+            .overlay(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
+                .stroke(on ? AppColor.accentMid : AppColor.border, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var loggingPage: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            title("When do you tick habits off?",
+                  "This decides whether your stats look at the time of day you do things. You can change it later in Settings.")
+            loggingTile(asTheyGo: true, title: "As I do them",
+                        text: "Through the day, right after each habit. Stats show when you usually do each one and which habits you do back to back.")
+            loggingTile(asTheyGo: false, title: "All at once",
+                        text: "For example in the evening, looking back on the day. Time-of-day stats are left out, since they'd only show when you logged.")
+        }
+    }
+
+    private func loggingTile(asTheyGo: Bool, title: String, text: String) -> some View {
+        let on = logsAsTheyGo == asTheyGo
+        return Button {
+            logsAsTheyGo = asTheyGo
+            prefs.timeStatsEnabled = asTheyGo
+        } label: {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title).font(AppFont.serif(24))
+                        .foregroundStyle(on ? AppColor.ink : AppColor.inkDim)
+                    Text(text).font(AppFont.sans(14))
+                        .foregroundStyle(AppColor.inkDim)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                CheckCircle(done: on)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)
                 .fill(on ? AppColor.surfaceAccent : AppColor.surface))
             .overlay(RoundedRectangle(cornerRadius: AppMetrics.tileRadius)

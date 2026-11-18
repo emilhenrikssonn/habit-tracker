@@ -20,7 +20,13 @@ struct RootView: View {
     @State private var openHabit: Habit? = nil
     /// Deleted once its page has finished closing, so the page never draws a deleted habit.
     @State private var habitToDelete: Habit? = nil
-    @State private var notificationsPresented: Bool = ProcessInfo.processInfo.environment["OPEN_NOTIFS"] == "1"
+    @State private var notificationsPresented: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["OPEN_NOTIFS"] == "1"
+        #else
+        return false
+        #endif
+    }()
 
     var body: some View {
         Group {

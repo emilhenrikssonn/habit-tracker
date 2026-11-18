@@ -41,7 +41,12 @@ enum SeedData {
             habit.activeStart = start
             habit.createdAt = start
             ctx.insert(habit)
-            for back in 1...60 where (back + index * 2) % missEvery != 0 {
+            for back in 1...60 {
+                // Meditate (index 4) is also skipped whenever Morning walk (index 2, every 6th day) is,
+                // so picking those two in Stats shows a clear link between their misses.
+                let walkMissed = (back + 2 * 2) % 6 == 0
+                let missed = (back + index * 2) % missEvery == 0 || (index == 4 && walkMissed)
+                if missed { continue }
                 let log = HabitLog(date: cal.date(byAdding: .day, value: -back, to: today)!,
                                    value: habit.dailyGoal, completed: true)
                 log.completedAt = log.date.addingTimeInterval(TimeInterval((minute + (back * 7) % 25) * 60))

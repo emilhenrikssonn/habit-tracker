@@ -390,3 +390,101 @@ struct YearGraphBlock: View {
         }
     }
 }
+
+/// Exactly two habits picked: how often missing one comes with missing the other.
+struct PairLinkBlock: View {
+    let report: InsightReport
+    /// Days both habits must have been due before the link is shown.
+    static let minSharedDays = 7
+
+    var body: some View {
+        if report.habits.count == 2, let link = report.pair {
+            let a = report.habits[0].name, b = report.habits[1].name
+            VStack(alignment: .leading, spacing: 14) {
+                SectionLabel(text: "Linked misses")
+                if link.sharedDays < Self.minSharedDays {
+                    insight("**\(md(a))** and **\(md(b))** need at least \(Self.minSharedDays) days in the range when both were due. Pick a longer range to compare them.")
+                } else {
+                    HStack(alignment: .lastTextBaseline, spacing: 10) {
+                        Text(link.score.map(Self.formatScore) ?? "–")
+                            .font(AppFont.mono(46)).foregroundStyle(AppColor.accent)
+                        Text(link.score.map(Insights.linkStrength) ?? "link score")
+                            .font(AppFont.mono(11)).foregroundStyle(AppColor.inkMute)
+                        Spacer()
+                    }
+                    scoreSubtitle(link.score)
+                    HStack(alignment: .top, spacing: 10) {
+                        side(missed: a, other: b, rate: link.bWhenAMissed, usual: link.bMissRate)
+                        side(missed: b, other: a, rate: link.aWhenBMissed, usual: link.aMissRate)
+                    }
+                    insight(caption(link, a: a, b: b))
+                }
+            }
+        }
+    }
+
+    /// What this score means for these two habits, then the scale it's on.
+    private func scoreSubtitle(_ score: Double?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(score.map(Insights.linkMeaning) ?? "No score yet: one of them was kept every day it was due, or never kept.")
+                .font(AppFont.sans(14)).foregroundStyle(AppColor.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 3) {
+                scaleRow("+1", "always missed on the same days")
+                scaleRow(" 0", "no link: missing one says nothing about the other")
+                scaleRow("−1", "missing one always goes with keeping the other")
+            }
+        }
+        .padding(.top, -6)
+    }
+
+    private func scaleRow(_ value: String, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(value).font(AppFont.mono(10)).foregroundStyle(AppColor.accent).frame(width: 18, alignment: .trailing)
+            Text(text).font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func side(missed: String, other: String, rate: Int?, usual: Int?) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("WHEN YOU MISS").font(AppFont.mono(10, weight: .medium)).tracking(1.6).foregroundStyle(AppColor.inkMute)
+            Text(missed).font(AppFont.serif(18)).foregroundStyle(AppColor.ink).lineLimit(2)
+            Text(rate.map { "\($0)%" } ?? "–").font(AppFont.mono(28)).foregroundStyle(AppColor.ink)
+            Text(rate == nil ? "never missed in this range" : "\(other) missed too")
+                .font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+                .fixedSize(horizontal: false, vertical: true)
+            if rate != nil, let usual {
+                Text("usually \(usual)%").font(AppFont.mono(10)).foregroundStyle(AppColor.inkMute)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: AppMetrics.cardRadius).fill(AppColor.surface))
+        .overlay(RoundedRectangle(cornerRadius: AppMetrics.cardRadius).stroke(AppColor.border, lineWidth: 1))
+    }
+
+    private func caption(_ link: Insights.PairLink, a: String, b: String) -> String {
+        let scale = "Based on \(link.sharedDays) days when both were due."
+        guard link.score != nil else { return scale }
+        // Lead with the direction where the miss carries over most.
+        let forward = (missed: a, other: b, rate: link.bWhenAMissed, usual: link.bMissRate)
+        let backward = (missed: b, other: a, rate: link.aWhenBMissed, usual: link.aMissRate)
+        let lead = (forward.rate ?? -1) >= (backward.rate ?? -1) ? forward : backward
+        guard let rate = lead.rate, let usual = lead.usual else { return scale }
+        return "When you miss **\(md(lead.missed))**, you miss **\(md(lead.other))** too **\(rate)%** of the time, against **\(usual)%** on an average day. " + scale
+    }
+
+    static func formatScore(_ score: Double) -> String {
+        let rounded = (score * 100).rounded() / 100
+        return rounded == 0 ? "0.00" : String(format: "%+.2f", rounded)
+    }
+
+    /// Habit names go inside Markdown, so characters Markdown would act on are escaped.
+    private func md(_ text: String) -> String {
+        text.reduce(into: "") { out, ch in
+            if "\\*_`[]~".contains(ch) { out.append("\\") }
+            out.append(ch)
+        }
+    }
+}
